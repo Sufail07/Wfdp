@@ -8,7 +8,7 @@ import pandas as pd
 router = APIRouter()
 
 
-@router.get("/", response_model=ForecastRevisionsResponse)
+@router.get("", response_model=ForecastRevisionsResponse)
 async def get_forecast_revisions(
     delivery_date: str,
     max_vintages: int = 10,

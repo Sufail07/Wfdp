@@ -13,7 +13,7 @@ import pandas as pd
 router = APIRouter()
 
 
-@router.get("/", response_model=RiskBandResponse)
+@router.get("", response_model=RiskBandResponse)
 async def get_risk_band(
     delivery_date: str,
     quantile: float = 0.9,

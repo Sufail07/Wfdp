@@ -25,7 +25,7 @@ CAVEATS = [
 ]
 
 
-@router.get("/", response_model=MetaResponse)
+@router.get("", response_model=MetaResponse)
 async def get_meta():
     """Get data coverage, defaults, assumptions, and caveats."""
     return MetaResponse(

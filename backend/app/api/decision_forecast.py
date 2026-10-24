@@ -9,7 +9,7 @@ import pandas as pd
 router = APIRouter()
 
 
-@router.get("/", response_model=DecisionForecastResponse)
+@router.get("", response_model=DecisionForecastResponse)
 async def get_decision_forecast(
     delivery_date: str,
     cutoff_hour: int = settings.cutoff_hour,
