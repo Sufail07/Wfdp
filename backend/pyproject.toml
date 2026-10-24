@@ -56,7 +56,6 @@ ignore = [
     "E501",  # line too long (handled by formatter)
     "B008",  # function calls in default args
 ]
-format = "black"
 
 [tool.ruff.format]
 quote-style = "double"
