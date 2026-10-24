@@ -1,0 +1,46 @@
+{
+  "data": [
+    {
+      "settlementDate": "2026-01-01",
+      "settlementPeriod": 1,
+      "fuelType": "WIND",
+      "generationMW": 4521.5
+    },
+    {
+      "settlementDate": "2026-01-01",
+      "settlementPeriod": 2,
+      "fuelType": "WIND",
+      "generationMW": 4498.2
+    },
+    {
+      "settlementDate": "2026-01-01",
+      "settlementPeriod": 3,
+      "fuelType": "WIND",
+      "generationMW": 4456.7
+    },
+    {
+      "settlementDate": "2026-01-01",
+      "settlementPeriod": 4,
+      "fuelType": "WIND",
+      "generationMW": 4423.1
+    },
+    {
+      "settlementDate": "2026-01-01",
+      "settlementPeriod": 48,
+      "fuelType": "WIND",
+      "generationMW": 5123.4
+    },
+    {
+      "settlementDate": "2026-01-02",
+      "settlementPeriod": 1,
+      "fuelType": "WIND",
+      "generationMW": 5234.8
+    },
+    {
+      "settlementDate": "2026-01-02",
+      "settlementPeriod": 2,
+      "fuelType": "WIND",
+      "generationMW": 5198.3
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "fetch_time": "2026-10-24T16:03:18.542377+00:00",
+  "row_counts": {
+    "fuelhh": 1488,
+    "windfor": 10416
+  },
+  "checksums": {
+    "fuelhh": "1993d8a721af68f5eebbae98bd7a3565eb6d978817df678d3b3f9b6550da1b79",
+    "windfor": "e63b213198bf5b21437799c30f58c8ebdf47c4b8b3ca7bd20c2189fa575bfa55"
+  },
+  "date_ranges": {
+    "fuelhh": {
+      "min": "2026-01-01T00:00:00",
+      "max": "2026-01-31T00:00:00"
+    },
+    "windfor": {
+      "min": "2026-01-02T00:00:00+00:00",
+      "max": "2026-02-01T23:30:00+00:00"
+    }
+  }
+}

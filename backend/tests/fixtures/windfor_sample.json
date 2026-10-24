@@ -1,0 +1,44 @@
+{
+  "data": [
+    {
+      "startTime": "2026-01-02T00:00:00Z",
+      "publishTime": "2026-01-01T08:00:00Z",
+      "forecastMW": 4600.0
+    },
+    {
+      "startTime": "2026-01-02T00:00:00Z",
+      "publishTime": "2026-01-01T14:00:00Z",
+      "forecastMW": 4650.0
+    },
+    {
+      "startTime": "2026-01-02T00:00:00Z",
+      "publishTime": "2026-01-01T20:00:00Z",
+      "forecastMW": 4700.0
+    },
+    {
+      "startTime": "2026-01-02T00:30:00Z",
+      "publishTime": "2026-01-01T08:00:00Z",
+      "forecastMW": 4580.0
+    },
+    {
+      "startTime": "2026-01-02T00:30:00Z",
+      "publishTime": "2026-01-01T14:00:00Z",
+      "forecastMW": 4620.0
+    },
+    {
+      "startTime": "2026-01-02T00:30:00Z",
+      "publishTime": "2026-01-01T20:00:00Z",
+      "forecastMW": 4680.0
+    },
+    {
+      "startTime": "2026-01-03T00:00:00Z",
+      "publishTime": "2026-01-02T08:00:00Z",
+      "forecastMW": 5300.0
+    },
+    {
+      "startTime": "2026-01-03T00:00:00Z",
+      "publishTime": "2026-01-02T14:00:00Z",
+      "forecastMW": 5250.0
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+"""Wind Forecast Data Ingestion Package."""
