@@ -1,5 +1,7 @@
 """Accuracy breakdown slices."""
 
+from typing import Dict, Any
+
 import pandas as pd
 import numpy as np
 from app.domain.metrics import compute_metrics, compute_metrics_by_group
@@ -109,6 +111,3 @@ def compute_error_distribution(
         },
         "quantiles": quantiles,
     }
-
-
-from typing import Dict, Any
