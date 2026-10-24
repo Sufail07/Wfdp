@@ -87,31 +87,31 @@ def test_adding_later_before_cutoff_changes_output(n):
     """Adding later-but-before-cutoff forecast changes output to that forecast."""
     df = make_forecasts(n)
     delivery_date = pd.Timestamp("2026-01-02")
-    base_result = select_decision_forecast(df, delivery_date)
-    
-    # Add a later forecast before cutoff
+
+    # Cutoff is D-1 09:00 London = 2026-01-01T09:00Z
+    # Publish new forecasts at 2026-01-01T08:00Z (1 hour before cutoff)
+    # This is later than any existing forecast publish times for early periods
+    cutoff_pub = pd.Timestamp("2026-01-01T08:00:00Z")
+
     base = pd.Timestamp("2026-01-02", tz="UTC")
     new_rows = []
     for i in range(5):
         start = base + pd.Timedelta(minutes=30 * i)
-        # Publish later than existing but before cutoff
-        pub = start - pd.Timedelta(hours=1)  # Very close to start, before cutoff
         new_rows.append({
             "startTime": start,
-            "publishTime": pub,
+            "publishTime": cutoff_pub,
             "forecastMW": 7777.0,
         })
-    
+
     df_with_later = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
     new_result = select_decision_forecast(df_with_later, delivery_date)
-    
-    if not base_result.empty and not new_result.empty:
-        # For matching startTimes, forecastMW should be 7777
-        merged = base_result[["startTime"]].merge(
-            new_result[["startTime", "forecastMW"]], on="startTime"
-        )
-        if not merged.empty:
-            assert (merged["forecastMW"] == 7777.0).all()
+
+    if not new_result.empty:
+        # For startTimes that match the new forecasts, forecastMW should be 7777
+        new_fcst_times = set(pd.DataFrame(new_rows)["startTime"])
+        matching = new_result[new_result["startTime"].isin(new_fcst_times)]
+        if not matching.empty:
+            assert (matching["forecastMW"] == 7777.0).all()
 
 
 @given(st.integers(min_value=0, max_value=10))
