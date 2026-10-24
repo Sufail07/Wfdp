@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useDecisionForecast, useForecastRevisions, useRiskBand } from '../../api/client'
 import { DeliveryDayPicker } from './DeliveryDayPicker'
 import { CutoffControl } from './CutoffControl'
@@ -6,7 +6,7 @@ import { KPIStrip } from './KPIStrip'
 import { MainChart } from './MainChart'
 import { VintagesToggle } from './VintagesToggle'
 import { AsOfCallout } from './AsOfCallout'
-import { formatMW, formatMWh, formatLondonTime } from '../../utils/format'
+import { formatLondonTime } from '../../utils/format'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingSkeleton } from '../../components/LoadingSkeleton'
 
@@ -15,7 +15,6 @@ const DEFAULT_DATE = '2026-01-02'
 export function DecisionBrief() {
   const [deliveryDate, setDeliveryDate] = useState(DEFAULT_DATE)
   const [cutoffHour, setCutoffHour] = useState(9)
-  const [cutoffMinute, setCutoffMinute] = useState(0)
   const [showVintages, setShowVintages] = useState(false)
 
   const {
@@ -25,7 +24,7 @@ export function DecisionBrief() {
   } = useDecisionForecast({
     delivery_date: deliveryDate,
     cutoff_hour: cutoffHour,
-    cutoff_minute: cutoffMinute,
+    cutoff_minute: 0,
   })
 
   const {
@@ -39,10 +38,9 @@ export function DecisionBrief() {
   } = useRiskBand({
     delivery_date: deliveryDate,
     cutoff_hour: cutoffHour,
-    cutoff_minute: cutoffMinute,
+    cutoff_minute: 0,
   })
 
-  // Compute risk-adjusted series
   const riskAdjustedSeries = useMemo(() => {
     if (!riskBand?.risk_adjusted) return []
     return riskBand.risk_adjusted.map((p) => ({
@@ -51,7 +49,6 @@ export function DecisionBrief() {
     }))
   }, [riskBand])
 
-  // Compute decision forecast series
   const forecastSeries = useMemo(() => {
     if (!forecast?.forecasts) return []
     return forecast.forecasts.map((f) => ({
@@ -63,6 +60,8 @@ export function DecisionBrief() {
   const latestForecastMW = forecastSeries.length > 0
     ? forecastSeries[forecastSeries.length - 1].y
     : undefined
+
+  const lastVintageMW = revisions?.vintages?.[revisions.vintages.length - 1]?.forecastMW
 
   return (
     <div className="space-y-6">
@@ -76,13 +75,13 @@ export function DecisionBrief() {
           />
           <CutoffControl
             hour={cutoffHour}
-            minute={cutoffMinute}
-            onChange={setCutoffHour}
+            minute={0}
+            onChange={(h) => setCutoffHour(h)}
           />
           <VintagesToggle
             enabled={showVintages}
-            onToggle={setShowVintages}
-            vintageCount={revisions?.vintages?.length || 0}
+            onToggle={() => setShowVintages((prev) => !prev)}
+            vintageCount={revisions?.vintages?.length ?? 0}
           />
         </div>
 
@@ -99,10 +98,10 @@ export function DecisionBrief() {
           {!forecastLoading && forecast && !forecastError && (
             <>
               <KPIStrip
-                totalExpectedMWh={forecast.total_expected_mwh}
-                peakMW={forecast.peak_mw}
-                minMW={forecast.min_mw}
-                meanMW={forecast.mean_mw}
+                totalExpectedMWh={forecast.total_expected_mwh ?? 0}
+                peakMW={forecast.peak_mw ?? 0}
+                minMW={forecast.min_mw ?? 0}
+                meanMW={forecast.mean_mw ?? 0}
                 publishedAt={forecast.forecast_published_at
                   ? formatLondonTime(forecast.forecast_published_at, 'HH:mm')
                   : undefined}
@@ -115,19 +114,15 @@ export function DecisionBrief() {
                 title={`Wind Forecast for ${deliveryDate}`}
               />
 
-              {forecast.forecasts && forecast.forecasts.length > 0 && (
+              {forecast.forecasts && forecast.forecasts.length > 0 && latestForecastMW !== undefined && lastVintageMW !== undefined && (
                 <AsOfCallout
                   deliveryDate={deliveryDate}
                   cutoffHour={cutoffHour}
-                  cutoffMinute={cutoffMinute}
+                  cutoffMinute={0}
                   publishedAt={forecast.forecast_published_at || '--'}
-                  forecastMW={latestForecastMW || 0}
-                  laterMW={revisions?.vintages?.[revisions.vintages.length - 1]?.forecastMW}
-                  moveMW={
-                    latestForecastMW !== undefined && revisions?.vintages?.[revisions.vintages.length - 1]?.forecastMW !== undefined
-                      ? revisions.vintages[revisions.vintages.length - 1].forecastMW - latestForecastMW
-                      : undefined
-                  }
+                  forecastMW={latestForecastMW}
+                  laterMW={lastVintageMW}
+                  moveMW={lastVintageMW - latestForecastMW}
                 />
               )}
             </>

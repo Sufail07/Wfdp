@@ -1,4 +1,3 @@
-import React from 'react'
 import { MultiLineChart } from '../../components/charts'
 
 interface MainChartProps {

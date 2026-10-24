@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useCallback } from 'react'
+import { useCallback } from 'react'
 import ReactECharts from 'echarts-for-react'
-import * as echarts from 'echarts'
 
 interface LineChartProps {
   data: Array<{ x: string | number; y: number }>

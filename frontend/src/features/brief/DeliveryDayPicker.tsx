@@ -1,6 +1,3 @@
-import React from 'react'
-import { useTheme } from '../../context/ThemeContext'
-
 interface DeliveryDayPickerProps {
   value: string
   onChange: (date: string) => void
@@ -9,7 +6,6 @@ interface DeliveryDayPickerProps {
 }
 
 export function DeliveryDayPicker({ value, onChange, min, max }: DeliveryDayPickerProps) {
-  const { theme } = useTheme()
 
   return (
     <div className="card">

@@ -1,4 +1,3 @@
-import React from 'react'
 import { KPICard } from '../../components/KPICard'
 
 interface KPIStripProps {

@@ -1,8 +1,7 @@
-import { format, formatDistanceToNow, parseISO, subDays } from 'date-fns'
-import { utcToZonedTime, zonedTimeToUtc, formatInTimeZone } from 'date-fns-tz'
+import { format } from 'date-fns'
+import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz'
 
 const LONDON_TZ = 'Europe/London'
-const UTC_TZ = 'UTC'
 
 /**
  * Format a timestamp for display in London time
@@ -69,13 +68,12 @@ export function getLondonDate(dateStr: string): string {
  * Get the cutoff timestamp (D-1 09:00 London) in ISO format
  */
 export function getCutoffISO(deliveryDate: string, hour: number = 9, minute: number = 0): string {
-  const londonTime = utcToZonedTime(
-    new Date(deliveryDate + 'T00:00:00Z'),
-    LONDON_TZ
-  )
-  londonTime.setDate(londonTime.getDate() - 1)
-  londonTime.setHours(hour, minute, 0, 0)
-  return zonedTimeToUtc(londonTime, LONDON_TZ).toISOString()
+  const deliveryUtc = new Date(deliveryDate + 'T00:00:00Z')
+  const deliveryLondon = toZonedTime(deliveryUtc, LONDON_TZ)
+  deliveryLondon.setDate(deliveryLondon.getDate() - 1)
+  deliveryLondon.setHours(hour, minute, 0, 0)
+  const cutoffUtc = fromZonedTime(deliveryLondon, LONDON_TZ)
+  return cutoffUtc.toISOString()
 }
 
 /**

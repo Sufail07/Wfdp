@@ -1,7 +1,8 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
+import { type ReactNode } from 'react'
 
-export function Layout() {
+export function Layout({ children }: { children: ReactNode }) {
   const { theme, toggleTheme } = useTheme()
   const location = useLocation()
 
@@ -55,7 +56,7 @@ export function Layout() {
         </div>
       </header>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Outlet />
+        {children}
       </main>
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500 dark:text-gray-400">

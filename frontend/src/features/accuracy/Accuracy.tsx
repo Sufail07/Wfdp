@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useAccuracySummary, useAccuracyByHorizon, useAccuracyByHour, useAccuracyByWindLevel, useAccuracyDaily, useAccuracyErrorDistribution } from '../../api/client'
 import { KPICard } from '../../components/KPICard'
-import { LineChart, BarChart, HeatmapChart } from '../../components/charts'
+import { LineChart, BarChart } from '../../components/charts'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingSkeleton } from '../../components/LoadingSkeleton'
-import { formatPercent, formatNumber } from '../../utils/format'
+import { formatPercent } from '../../utils/format'
 
 const DEFAULT_FROM = '2026-01-02'
 const DEFAULT_TO = '2026-01-08'
