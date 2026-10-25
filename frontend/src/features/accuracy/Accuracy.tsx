@@ -4,7 +4,7 @@ import { KpiNumeral } from '../../components/KpiNumeral'
 import { BarChart, HistogramChart } from '../../components/charts'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/StateViews'
-import { formatPercent, buildAccuracySummary, buildBiasLine, countDaysInRange, METRIC_TOOLTIPS } from '../../utils/format'
+import { formatPercent, buildAccuracySummary, buildBiasLine, countDaysInRange, METRIC_TOOLTIPS, formatLondonDate } from '../../utils/format'
 
 const DEFAULT_FROM = '2026-01-02'
 const DEFAULT_TO = '2026-01-08'
@@ -12,11 +12,21 @@ const DEFAULT_TO = '2026-01-08'
 // Horizon bucket labels in order (must match backend)
 const HORIZON_BUCKETS = ['0-6h', '6-12h', '12-24h', '24-36h', '36-48h', '48h+']
 
-// Wind level labels with MW ranges (approximate, from terciles of actualMW)
+// Short labels for horizon buckets
+const HORIZON_LABELS: Record<string, string> = {
+  '0-6h': '0–6h',
+  '6-12h': '6–12h',
+  '12-24h': '12–24h',
+  '24-36h': '24–36h',
+  '36-48h': '36–48h',
+  '48h+': '48h+',
+}
+
+// Wind level labels (rebinned by forecast wind, stable terciles from full snapshot)
 const WIND_LEVEL_LABELS: Record<string, string> = {
-  low: 'Low (0 – ~5,500 MW)',
-  medium: 'Medium (~5,500 – ~7,500 MW)',
-  high: 'High (~7,500+ MW)',
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
 }
 
 export function Accuracy() {
@@ -67,9 +77,9 @@ export function Accuracy() {
 
   const metrics = summary?.metrics || {}
   const nDays = countDaysInRange(fromDate, toDate)
-  const isSmallSample = nDays < 7
+  const rangeSmallSample = nDays < 14
 
-  // Build horizon data with all 6 buckets (empty buckets shown as n=0)
+  // Build horizon data with ALL 6 buckets (empty ones shown as "no data")
   const horizonData = useMemo(() => {
     const byBucket = new Map(
       byHorizon?.results?.map((r: any) => [r.horizon_bucket, r]) || []
@@ -77,7 +87,8 @@ export function Accuracy() {
     return HORIZON_BUCKETS.map((bucket) => {
       const r = byBucket.get(bucket)
       return {
-        x: bucket,
+        x: HORIZON_LABELS[bucket] ?? bucket,
+        xRaw: bucket,
         y: r?.mae || 0,
         n: r?.n || 0,
         hasData: !!r,
@@ -101,7 +112,7 @@ export function Accuracy() {
     })
   }, [byHour])
 
-  // Build wind level data
+  // Build wind level data (rebinned by forecast wind)
   const windLevelData = useMemo(() => {
     const byLevelMap = new Map(
       byWindLevel?.results?.map((r: any) => [r.wind_level, r]) || []
@@ -110,6 +121,7 @@ export function Accuracy() {
       const r = byLevelMap.get(level)
       return {
         x: WIND_LEVEL_LABELS[level] || level,
+        xRaw: level,
         y: r?.mae || 0,
         n: r?.n || 0,
         hasData: !!r,
@@ -120,7 +132,7 @@ export function Accuracy() {
   // Build daily data (bars)
   const dailyData = useMemo(() => {
     return (daily?.results?.map((r: any) => ({
-      x: String(r.delivery_date || ''),
+      x: formatLondonDate(String(r.delivery_date || '')),
       y: r.mae || 0,
     })) || [])
   }, [daily])
@@ -128,7 +140,7 @@ export function Accuracy() {
   // Daily bias data (for overlay toggle)
   const dailyBiasData = useMemo(() => {
     return (daily?.results?.map((r: any) => ({
-      x: String(r.delivery_date || ''),
+      x: formatLondonDate(String(r.delivery_date || '')),
       y: r.bias || 0,
     })) || [])
   }, [daily])
@@ -137,12 +149,39 @@ export function Accuracy() {
   const histBins = errorDist?.distribution?.histogram?.bins || []
   const histCounts = errorDist?.distribution?.histogram?.counts || []
   const quantiles = errorDist?.distribution?.quantiles || {}
-  const p90 = quantiles?.p90
-  const p95 = quantiles?.p95
+  const p90All = quantiles?.p90
+  const p95All = quantiles?.p95
 
-  // Summary sentence
-  const summarySentence = buildAccuracySummary(fromDate, toDate, metrics.bias, metrics.tail_risk_p95_over_mw)
+  // Summary sentence uses P95 of ALL signed errors (not over-forecasts only)
+  const summarySentence = buildAccuracySummary(fromDate, toDate, metrics.bias, p95All)
   const biasLine = buildBiasLine(metrics.bias)
+
+  // Dynamic horizon trend sentence
+  const horizonTrend = useMemo(() => {
+    const validBuckets = horizonData.filter((d) => d.hasData && d.n > 0)
+    if (validBuckets.length < 2) return 'Not enough buckets to compare.'
+
+    const first = validBuckets[0]
+    const last = validBuckets[validBuckets.length - 1]
+    const change = ((last.y - first.y) / first.y) * 100
+
+    if (change > 10) {
+      return `MAE roughly rises with horizon: ${first.y.toFixed(0)} MW at ${first.xRaw} → ${last.y.toFixed(0)} MW at ${last.xRaw} (+${change.toFixed(0)}%).`
+    } else if (change < -10) {
+      return `MAE roughly falls with horizon: ${first.y.toFixed(0)} MW at ${first.xRaw} → ${last.y.toFixed(0)} MW at ${last.xRaw} (${change.toFixed(0)}%).`
+    } else {
+      return `No clear trend: MAE is ${first.y.toFixed(0)} MW at ${first.xRaw} and ${last.y.toFixed(0)} MW at ${last.xRaw} (${change.toFixed(0)}%).`
+    }
+  }, [horizonData])
+
+  // Format snapshot date
+  const snapshotDisplay = meta?.snapshot_id ? formatLondonDate(meta.snapshot_id) : ''
+
+  // Small sample per-bar notice (bars with n < 30 half-hours)
+  const barsWithFewSamples = [
+    ...hourData.filter((d) => d.hasData && d.n > 0 && d.n < 30),
+    ...windLevelData.filter((d) => d.hasData && d.n > 0 && d.n < 30),
+  ]
 
   return (
     <div className="space-y-8">
@@ -173,7 +212,7 @@ export function Accuracy() {
             </div>
             {meta && (
               <p className="text-xs font-mono text-ink-muted mt-2 lg:mt-0">
-                Data: Elexon BMRS · Snapshot fetched {meta.snapshot_id} · Actuals as of fetch date
+                Source: Elexon BMRS · Snapshot fetched {snapshotDisplay} · {nDays} day(s)
               </p>
             )}
           </div>
@@ -190,45 +229,53 @@ export function Accuracy() {
 
       {!loading && summary && !summaryError && (
         <>
-          {/* Small-sample notice */}
-          {isSmallSample && (
+          {/* Small-sample notices */}
+          {rangeSmallSample && (
             <div className="card border border-over bg-surface">
               <p className="font-mono text-over text-sm">
-                Small sample: {nDays} day(s) in range. Metrics may not be representative.
+                Small sample: {nDays} day(s) in range (under 14 days). Metrics may not be representative.
+              </p>
+            </div>
+          )}
+          {barsWithFewSamples.length > 0 && (
+            <div className="card border border-over bg-surface">
+              <p className="font-mono text-over text-sm">
+                Small sample: {barsWithFewSamples.length} bar(s) rest on fewer than 30 half-hours. Treat with caution.
               </p>
             </div>
           )}
 
-          {/* KPI strip */}
+          {/* KPI strip - all error metrics in MW */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <KpiNumeral
-              value={metrics.bias !== undefined ? (Math.abs(metrics.bias) >= 1000 ? (metrics.bias / 1000).toFixed(1) : metrics.bias.toFixed(0)) : '--'}
+              value={metrics.bias !== undefined ? metrics.bias.toFixed(0) : '--'}
               label="Bias"
-              unit={metrics.bias !== undefined && Math.abs(metrics.bias) >= 1000 ? 'GW' : 'MW'}
+              unit="MW"
               n={metrics.n}
               nDays={metrics.n_days}
               helpText={METRIC_TOOLTIPS.bias}
               change={biasLine || undefined}
             />
             <KpiNumeral
-              value={metrics.mae !== undefined ? (Math.abs(metrics.mae) >= 1000 ? (metrics.mae / 1000).toFixed(1) : metrics.mae.toFixed(0)) : '--'}
+              value={metrics.mae !== undefined ? metrics.mae.toFixed(0) : '--'}
               label="MAE"
-              unit={metrics.mae !== undefined && Math.abs(metrics.mae) >= 1000 ? 'GW' : 'MW'}
+              unit="MW"
               n={metrics.n}
               nDays={metrics.n_days}
               helpText={METRIC_TOOLTIPS.mae}
             />
             <KpiNumeral
-              value={metrics.rmse !== undefined ? (Math.abs(metrics.rmse) >= 1000 ? (metrics.rmse / 1000).toFixed(1) : metrics.rmse.toFixed(0)) : '--'}
+              value={metrics.rmse !== undefined ? metrics.rmse.toFixed(0) : '--'}
               label="RMSE"
-              unit={metrics.rmse !== undefined && Math.abs(metrics.rmse) >= 1000 ? 'GW' : 'MW'}
+              unit="MW"
               n={metrics.n}
               nDays={metrics.n_days}
               helpText={METRIC_TOOLTIPS.rmse}
             />
             <KpiNumeral
-              value={metrics.nmae !== undefined ? metrics.nmae.toFixed(3) : '--'}
+              value={metrics.nmae !== undefined ? (metrics.nmae * 100).toFixed(1) : '--'}
               label="nMAE"
+              unit="%"
               n={metrics.n}
               nDays={metrics.n_days}
               helpText={METRIC_TOOLTIPS.nmae}
@@ -258,12 +305,12 @@ export function Accuracy() {
                 />
                 {showBiasOnDaily && (
                   <p className="text-xs font-mono text-ink-muted mt-2">
-                    Solid bars = MAE · Line = signed daily bias (positive = over-forecast)
+                    Solid bars = MAE · Line = signed daily bias (+ = over-forecast)
                   </p>
                 )}
               </div>
               <p className="text-xs font-mono text-ink-muted mt-2">
-                Source: Elexon BMRS · Snapshot {meta?.snapshot_id} · Actuals as of fetch date
+                Source: Elexon BMRS
               </p>
             </div>
 
@@ -276,45 +323,42 @@ export function Accuracy() {
                   counts={histCounts}
                   zeroLine={true}
                   markers={[
-                    { value: p90 ?? 0, label: `P90: ${Math.round(p90 ?? 0)} MW`, color: 'var(--over)' },
-                    { value: p95 ?? 0, label: `P95: ${Math.round(p95 ?? 0)} MW`, color: 'var(--over)' },
+                    { value: p90All ?? 0, label: `P90 all: ${Math.round(p90All ?? 0)} MW`, color: 'var(--over)' },
+                    { value: p95All ?? 0, label: `P95 all: ${Math.round(p95All ?? 0)} MW`, color: 'var(--over)' },
                   ]}
                   height={320}
                 />
               </div>
               <p className="text-xs font-mono text-ink-muted mt-2">
-                Positive error = forecast above actual wind (shortfall risk). P90:{p90 !== undefined ? ` ${Math.round(p90)} MW` : '—'} · P95:{p95 !== undefined ? ` ${Math.round(p95)} MW` : '—'} (all signed errors).{p95 !== undefined ? ` Tail risk P95 (over-forecasts only): ${Math.round(metrics.tail_risk_p95_over_mw ?? 0)} MW.` : ''}
+                Positive error = forecast above actual wind (shortfall risk). P90 of all signed errors:{p90All !== undefined ? ` ${Math.round(p90All)} MW` : '—'} · P95 of all signed errors:{p95All !== undefined ? ` ${Math.round(p95All)} MW` : '—'}.
               </p>
               <p className="text-xs font-mono text-ink-muted mt-1">
-                Source: Elexon BMRS · Snapshot {meta?.snapshot_id} · Actuals as of fetch date
+                Source: Elexon BMRS
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Horizon */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Horizon - spans full width in two-col grid */}
             <div className="card lg:col-span-2">
               <h3 className="section-title">MAE by forecast horizon (MW)</h3>
               <div className="relative">
                 <BarChart
-                  data={horizonData.filter((d) => d.hasData)}
+                  data={horizonData}
                   height={320}
                 />
-                {horizonData.some((d) => !d.hasData) && (
-                  <p className="text-xs font-mono text-ink-muted mt-2">
-                    Empty buckets (0-6h, 6-12h) have no forecast vintages in this range.
-                  </p>
-                )}
               </div>
-              <p className="text-xs font-mono text-ink-muted mt-2">
-                Built from ALL WINDFOR vintages (publishTime &lt; startTime), bucketed by horizon = startTime − publishTime.
-                MAE does not consistently rise with horizon in this sample.
+              <p className="text-xs font-mono text-ink-muted mt-2">{horizonTrend}</p>
+              <p className="text-xs font-mono text-ink-muted mt-1">
+                Built from ALL WINDFOR vintages (publishTime &lt; startTime), bucketed by horizon = startTime - publishTime.
               </p>
               <p className="text-xs font-mono text-ink-muted mt-1">
-                Source: Elexon BMRS · Snapshot {meta?.snapshot_id} · Actuals as of fetch date
+                Source: Elexon BMRS
               </p>
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* By hour */}
             <div className="card">
               <h3 className="section-title">MAE by hour of day, London time (MW)</h3>
@@ -325,48 +369,62 @@ export function Accuracy() {
                 />
               </div>
               <p className="text-xs font-mono text-ink-muted mt-2">
-                Source: Elexon BMRS · Snapshot {meta?.snapshot_id} · Actuals as of fetch date
+                Source: Elexon BMRS
               </p>
             </div>
 
-            {/* By wind level */}
-            <div className="card">
-              <h3 className="section-title">MAE by wind level (MW)</h3>
-              <div className="relative">
-                <BarChart
-                  data={windLevelData.filter((d) => d.hasData)}
-                  height={320}
-                />
+            {/* By wind level + Shortfall risk paired */}
+            <div className="card flex flex-col gap-4">
+              <div>
+                <h3 className="section-title">MAE by wind level (MW)</h3>
+                <div className="relative">
+                  <BarChart
+                    data={windLevelData.filter((d) => d.hasData)}
+                    height={320}
+                  />
+                </div>
+                {byWindLevel?.tercile_lower !== undefined && byWindLevel?.tercile_upper !== undefined && (
+                  <p className="text-xs font-mono text-ink-muted mt-1">
+                    {'Binned by forecast wind (terciles from full snapshot): Low < '}
+                    {Math.round(byWindLevel.tercile_lower!)}
+                    {' MW, Medium '}
+                    {Math.round(byWindLevel.tercile_lower!)}
+                    {'–'}
+                    {Math.round(byWindLevel.tercile_upper!)}
+                    {' MW, High > '}
+                    {Math.round(byWindLevel.tercile_upper!)}
+                    {' MW.'}
+                  </p>
+                )}
+                <p className="text-xs font-mono text-ink-muted mt-1">
+                  Source: Elexon BMRS
+                </p>
               </div>
-              <p className="text-xs font-mono text-ink-muted mt-2">
-                Terciles of actualMW. Source: Elexon BMRS · Snapshot {meta?.snapshot_id} · Actuals as of fetch date
-              </p>
-            </div>
-          </div>
 
-          {/* Shortfall risk block */}
-          <div className="card">
-            <h3 className="section-title">Shortfall risk</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <KpiNumeral
-                value={metrics.over_forecast_share !== undefined ? formatPercent(metrics.over_forecast_share) : '--'}
-                label="Over-forecast share"
-                n={metrics.n}
-                nDays={metrics.n_days}
-                helpText="Share of half-hours where forecast was above actual wind (shortfall risk for buyer)"
-              />
-              <KpiNumeral
-                value={metrics.tail_risk_p95_over_mw !== undefined ? metrics.tail_risk_p95_over_mw.toFixed(0) : '--'}
-                label="P95 over-forecast"
-                unit="MW"
-                n={metrics.n}
-                nDays={metrics.n_days}
-                helpText="P95 of positive (over-forecast) errors"
-              />
+              <div className="border-t border-rule pt-4">
+                <h3 className="section-title" style={{ fontSize: '16px', marginBottom: '12px' }}>Shortfall risk</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <KpiNumeral
+                    value={metrics.over_forecast_share !== undefined ? formatPercent(metrics.over_forecast_share) : '--'}
+                    label="Over-forecast share"
+                    n={metrics.n}
+                    nDays={metrics.n_days}
+                    helpText="Share of half-hours where forecast was above actual wind (shortfall risk for buyer)"
+                  />
+                  <KpiNumeral
+                    value={metrics.tail_risk_p95_over_mw !== undefined ? metrics.tail_risk_p95_over_mw.toFixed(0) : '--'}
+                    label="P95 over-forecasts only"
+                    unit="MW"
+                    n={metrics.n}
+                    nDays={metrics.n_days}
+                    helpText="P95 of positive (over-forecast) errors only — not the same as P95 of all errors"
+                  />
+                </div>
+                <p className="text-xs font-mono text-ink-muted mt-2">
+                  Positive error = forecast above actual wind = buyer faces shortfall. P95 of all errors (histogram):{p95All !== undefined ? ` ${Math.round(p95All)} MW` : '—'} · P95 of over-forecasts only:{metrics.tail_risk_p95_over_mw !== undefined ? ` ${Math.round(metrics.tail_risk_p95_over_mw)} MW` : '—'}.
+                </p>
+              </div>
             </div>
-            <p className="text-xs font-mono text-ink-muted mt-2">
-              Positive error = forecast above actual wind = buyer faces shortfall. P95 definition matches Error Distribution card.
-            </p>
           </div>
         </>
       )}

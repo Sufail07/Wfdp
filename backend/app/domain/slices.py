@@ -23,30 +23,67 @@ def add_hour_of_day(df: pd.DataFrame, tz: str = "Europe/London") -> pd.DataFrame
     return df
 
 
-def add_wind_level_tercile(df: pd.DataFrame) -> pd.DataFrame:
-    """Add wind level tercile based on actualMW."""
+def add_wind_level_tercile(df: pd.DataFrame, tercile_bounds: tuple[float, float] | None = None,
+                           by_forecast: bool = False) -> pd.DataFrame:
+    """Add wind level tercile column.
+
+    Args:
+        df: DataFrame with forecastMW and/or actualMW columns.
+        tercile_bounds: (lower_bound, upper_bound) for tercile boundaries.
+            If None, computed from the data.
+        by_forecast: If True, bin by forecastMW (what trader knew); if False,
+            bin by actualMW (what actually happened).
+    """
     df = df.copy()
-    valid = df.dropna(subset=["actualMW"])
+    value_col = "forecastMW" if by_forecast else "actualMW"
+    valid = df.dropna(subset=[value_col])
     if len(valid) == 0:
         df["wind_level"] = "unknown"
         return df
-    
-    terciles = valid["actualMW"].quantile([1/3, 2/3]).values
-    bins = [-np.inf, terciles[0], terciles[1], np.inf]
+
+    if tercile_bounds is not None:
+        lower, upper = tercile_bounds
+    else:
+        lower = valid[value_col].quantile(1 / 3)
+        upper = valid[value_col].quantile(2 / 3)
+
+    bins = [-np.inf, lower, upper, np.inf]
     labels = ["low", "medium", "high"]
-    df["wind_level"] = pd.cut(df["actualMW"], bins=bins, labels=labels)
+    df["wind_level"] = pd.cut(df[value_col], bins=bins, labels=labels)
     return df
 
 
-def add_delivery_date(df: pd.DataFrame, tz: str = "Europe/London") -> pd.DataFrame:
-    """Add delivery date in London time."""
-    df = df.copy()
-    df["delivery_date"] = df["startTime"].dt.tz_convert(tz).dt.date
-    return df
+def compute_wind_level_terciles(windfor_df: pd.DataFrame) -> tuple[float, float]:
+    """Compute stable tercile boundaries from forecastMW across the full snapshot."""
+    valid = windfor_df.dropna(subset=["forecastMW"])
+    if len(valid) == 0:
+        return (0.0, 0.0)
+    lower = float(valid["forecastMW"].quantile(1 / 3))
+    upper = float(valid["forecastMW"].quantile(2 / 3))
+    return (lower, upper)
+
+
+def compute_by_hour(aligned_pairs: pd.DataFrame, tz: str = "Europe/London") -> pd.DataFrame:
+    """Compute accuracy by hour of day (London local)."""
+    df = add_hour_of_day(aligned_pairs, tz)
+    return compute_metrics_by_group(df, "hour_of_day")
+
+
+def compute_by_wind_level(aligned_pairs: pd.DataFrame, tercile_bounds: tuple[float, float] | None = None,
+                          by_forecast: bool = False) -> pd.DataFrame:
+    """Compute accuracy by wind level terciles.
+
+    Args:
+        aligned_pairs: DataFrame with forecastMW, actualMW, errorMW.
+        tercile_bounds: Stable (lower, upper) boundaries from full snapshot.
+        by_forecast: If True, bin by forecastMW; if False, bin by actualMW.
+    """
+    df = add_wind_level_tercile(df=aligned_pairs, tercile_bounds=tercile_bounds, by_forecast=by_forecast)
+    return compute_metrics_by_group(df, "wind_level")
 
 
 def compute_by_horizon(aligned_pairs: pd.DataFrame) -> pd.DataFrame:
-    """Compute accuracy by forecast horizon."""
+    """Compute accuracy by forecast horizon (decision forecast only)."""
     df = add_horizon_bucket(aligned_pairs)
     return compute_metrics_by_group(df, "horizon_bucket")
 
@@ -89,16 +126,11 @@ def compute_by_horizon_all_vintages(windfor_df: pd.DataFrame, fuelhh_df: pd.Data
     return compute_metrics_by_group(df, "horizon_bucket")
 
 
-def compute_by_hour(aligned_pairs: pd.DataFrame, tz: str = "Europe/London") -> pd.DataFrame:
-    """Compute accuracy by hour of day (London local)."""
-    df = add_hour_of_day(aligned_pairs, tz)
-    return compute_metrics_by_group(df, "hour_of_day")
-
-
-def compute_by_wind_level(aligned_pairs: pd.DataFrame) -> pd.DataFrame:
-    """Compute accuracy by actual wind level (terciles)."""
-    df = add_wind_level_tercile(aligned_pairs)
-    return compute_metrics_by_group(df, "wind_level")
+def add_delivery_date(df: pd.DataFrame, tz: str = "Europe/London") -> pd.DataFrame:
+    """Add delivery date in London time."""
+    df = df.copy()
+    df["delivery_date"] = df["startTime"].dt.tz_convert(tz).dt.date
+    return df
 
 
 def compute_daily(aligned_pairs: pd.DataFrame, tz: str = "Europe/London") -> pd.DataFrame:

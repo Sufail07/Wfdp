@@ -83,6 +83,8 @@ interface AccuracyByWindLevelResponse {
   cutoff_hour: number | null
   cutoff_minute: number | null
   results: Record<string, any>[]
+  tercile_lower: number | null
+  tercile_upper: number | null
 }
 
 interface AccuracyDailyResponse {

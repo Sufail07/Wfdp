@@ -108,6 +108,8 @@ class AccuracyByWindLevelResponse(BaseModel):
     cutoff_hour: int | None = None
     cutoff_minute: int | None = None
     results: list[dict[str, Any]]
+    tercile_lower: float | None = None
+    tercile_upper: float | None = None
 
 
 # --- /accuracy/daily ---

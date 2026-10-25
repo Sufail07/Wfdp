@@ -94,6 +94,23 @@ export function capitalize(str: string): string {
 }
 
 /**
+ * Format an ISO snapshot timestamp as "24 Oct 2026, 16:03 UTC".
+ */
+export function formatLondonDate(isoString: string): string {
+  try {
+    const d = new Date(isoString)
+    const day = d.getUTCDate()
+    const month = d.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })
+    const year = d.getUTCFullYear()
+    const hours = d.getUTCHours().toString().padStart(2, '0')
+    const minutes = d.getUTCMinutes().toString().padStart(2, '0')
+    return `${day} ${month} ${year}, ${hours}:${minutes} UTC`
+  } catch {
+    return isoString
+  }
+}
+
+/**
  * Format a signed MW value with direction words (above/below).
  * Positive = over-forecast = forecast above actual = shortfall risk.
  */
@@ -106,23 +123,27 @@ export function formatBiasDirection(value: number): { direction: 'above' | 'belo
  * Build the accuracy summary sentence for a date range.
  * e.g. "Over 14 to 17 January, forecasts ran 337 MW below actual wind on average,
  * and 1 in 20 half-hours was off by more than 1.1 GW."
+ * 
+ * p95All is the P95 of ALL signed errors (not over-forecasts only), so
+ * "1 in 20 half-hours" is statistically correct.
  */
 export function buildAccuracySummary(
   fromDate: string,
   toDate: string,
   bias: number | null | undefined,
-  p95OverMw: number | null | undefined,
+  p95AllMw: number | null | undefined,
 ): string {
   if (bias === null || bias === undefined || isNaN(bias)) {
     return `Over ${fromDate} to ${toDate}, no accuracy data available.`
   }
 
   const { direction, absValue } = formatBiasDirection(bias)
-  const nIn20 = p95OverMw !== null && p95OverMw !== undefined && !isNaN(p95OverMw)
-    ? `1 in 20 half-hours was off by more than ${formatMW(p95OverMw)}`
+  const biasStr = absValue.toFixed(0)
+  const nIn20 = p95AllMw !== null && p95AllMw !== undefined && !isNaN(p95AllMw)
+    ? `1 in 20 half-hours was off by more than ${formatMW(p95AllMw)}`
     : ''
 
-  return `Over ${fromDate} to ${toDate}, forecasts ran ${absValue.toFixed(0)} MW ${direction} actual wind on average.${nIn20 ? ' ' + nIn20 : ''}`
+  return `Over ${fromDate} to ${toDate}, forecasts ran ${biasStr} MW ${direction} actual wind on average.${nIn20 ? ' ' + nIn20 : ''}`
 }
 
 /**

@@ -51,3 +51,22 @@ Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
   value: 300,
   configurable: true,
 })
+
+// Mock getComputedStyle for CSS variable resolution in ECharts color helper
+Object.defineProperty(window, 'getComputedStyle', {
+  value: () => ({
+    getPropertyValue: (name: string) => {
+      const vars: Record<string, string> = {
+        '--paper': '#F6F4EF',
+        '--ink': '#15171A',
+        '--ink-muted': '#6B6F76',
+        '--rule': '#D9D5CB',
+        '--accent': '#1F6F8B',
+        '--over': '#C4452D',
+        '--under': '#2D6A9F',
+      }
+      return vars[name] || ''
+    },
+  }),
+  writable: true,
+})

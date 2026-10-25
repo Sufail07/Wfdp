@@ -24,6 +24,7 @@ from app.domain.slices import (
     compute_by_wind_level,
     compute_daily,
     compute_error_distribution,
+    compute_wind_level_terciles,
 )
 
 router = APIRouter()
@@ -178,8 +179,18 @@ async def get_accuracy_by_wind_level(
     cutoff_hour: int = None,
     cutoff_minute: int = None,
 ):
-    """Get accuracy by actual wind level."""
+    """Get accuracy by forecast wind level terciles (what trader knew).
+
+    Bins by forecastMW (decision forecast), not actualMW, to avoid selection effect.
+    Tercile boundaries are computed from the full snapshot for stability.
+    """
     _validate_range(from_date, to_date)
+
+    snapshot_path = settings.snapshot_path
+    snapshot = load_snapshot(snapshot_path)
+
+    # Stable tercile boundaries from full snapshot
+    tercile_lower, tercile_upper = compute_wind_level_terciles(snapshot.windfor)
 
     ch = cutoff_hour if cutoff_hour is not None else settings.cutoff_hour
     cm = cutoff_minute if cutoff_minute is not None else settings.cutoff_minute
@@ -188,7 +199,9 @@ async def get_accuracy_by_wind_level(
     if aligned.empty:
         raise HTTPException(status_code=404, detail="No data for date range")
 
-    results = compute_by_wind_level(aligned)
+    results = compute_by_wind_level(
+        aligned, tercile_bounds=(tercile_lower, tercile_upper), by_forecast=True
+    )
     results_list = results.to_dict("records")
 
     return AccuracyByWindLevelResponse(
@@ -197,6 +210,8 @@ async def get_accuracy_by_wind_level(
         cutoff_hour=ch,
         cutoff_minute=cm,
         results=results_list,
+        tercile_lower=tercile_lower,
+        tercile_upper=tercile_upper,
     )
 
 

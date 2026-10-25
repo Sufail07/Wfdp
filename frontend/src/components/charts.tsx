@@ -1,7 +1,20 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import ReactECharts from 'echarts-for-react'
 import { useTheme } from '../context/ThemeContext'
 import { getEChartsTheme } from './echartsTheme'
+import { resolveColor, clearColorCache } from '../utils/colors'
+
+// Clear color cache when theme changes so ECharts picks up new values
+export function useResolvedColor(token: string): string {
+  const [color, setColor] = useState<string>(() => resolveColor(token))
+
+  useEffect(() => {
+    clearColorCache()
+    setColor(resolveColor(token))
+  }, [token])
+
+  return color
+}
 
 interface BaseChartProps {
   title?: string
@@ -11,14 +24,28 @@ interface BaseChartProps {
   xAxisLabel?: string
 }
 
-/** Common ECharts option base with the publication theme's styling */
+/** Common ECharts option base with resolved colours */
 function baseOption({
   title,
   yAxisLabel,
   xAxisLabel,
   bottom = 45,
   xLabelRotate = 0,
-}: BaseChartProps & { bottom?: number; xLabelRotate?: number }) {
+  yFormatter = (v: number) => `${Math.round(v)} MW`,
+  ruleColor = '#D9D5CB',
+  inkColor = '#15171A',
+  inkMutedColor = '#6B6F76',
+  paperColor = '#F6F4EF',
+}: BaseChartProps & {
+  bottom?: number
+  xLabelRotate?: number
+  yFormatter?: (v: number) => string
+  ruleColor?: string
+  inkColor?: string
+  inkMutedColor?: string
+  paperColor?: string
+}) {
+
   return {
     title: title
       ? {
@@ -29,26 +56,26 @@ function baseOption({
             fontSize: 16,
             fontWeight: 400,
             fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif',
-            color: 'var(--ink)',
+            color: inkColor,
           },
         }
       : undefined,
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'line' },
-      backgroundColor: 'var(--paper)',
-      borderColor: 'var(--rule)',
-      textStyle: { color: 'var(--ink)', fontSize: 11, fontFamily: 'ui-monospace, monospace' },
+      backgroundColor: paperColor,
+      borderColor: ruleColor,
+      textStyle: { color: inkColor, fontSize: 11, fontFamily: 'ui-monospace, monospace' },
     },
     grid: { left: '8%', right: '6%', top: 40, bottom, containLabel: true },
     xAxis: {
       type: 'category',
-      axisLine: { lineStyle: { color: 'var(--rule)' } },
+      axisLine: { lineStyle: { color: ruleColor } },
       axisTick: { show: true, length: 3 },
       axisLabel: {
         fontFamily: 'ui-monospace, SFMono-Regular, monospace',
         fontSize: 9,
-        color: 'var(--ink-muted)',
+        color: inkMutedColor,
         rotate: xLabelRotate,
         margin: 12,
       },
@@ -64,12 +91,12 @@ function baseOption({
       axisLabel: {
         fontFamily: 'ui-monospace, SFMono-Regular, monospace',
         fontSize: 9,
-        color: 'var(--ink-muted)',
-        formatter: (v: number) => `${Math.round(v)} MW`,
+        color: inkMutedColor,
+        formatter: yFormatter,
       },
       splitLine: {
         show: true,
-        lineStyle: { color: 'var(--rule)', type: 'solid', width: 0.5 },
+        lineStyle: { color: ruleColor, type: 'solid', width: 0.5 },
       },
       name: yAxisLabel,
       nameLocation: 'center',
@@ -90,16 +117,28 @@ export function BarChart({
   data,
   series2,
   series2Name = 'Bias',
-  series2Color = 'var(--over)',
+  series2Color,
   height = 320,
 }: BarChartProps) {
   const { theme } = useTheme()
   const echartsTheme = getEChartsTheme(theme === 'dark')
 
+  // Resolve CSS variables to real colours for ECharts
+  const accentColor = useResolvedColor('--accent')
+  const ruleColor = useResolvedColor('--rule')
+  const inkColor = useResolvedColor('--ink')
+  const inkMutedColor = useResolvedColor('--ink-muted')
+  const paperColor = useResolvedColor('--paper')
+  const overColor = series2Color ? useResolvedColor(series2Color) : useResolvedColor('--over')
+
   const option = useCallback(() => {
     const base = baseOption({
       bottom: series2 ? 55 : 45,
       xLabelRotate: -45,
+      ruleColor,
+      inkColor,
+      inkMutedColor,
+      paperColor,
     })
 
     const series: any[] = [
@@ -107,8 +146,8 @@ export function BarChart({
         type: 'bar',
         name: 'MAE',
         data: data.map((d) => d.y),
-        color: 'var(--accent)',
-        barWidth: '50%',
+        color: accentColor,
+        barWidth: '55%',
         itemStyle: {
           borderRadius: [2, 2, 0, 0],
           opacity: 1,
@@ -126,8 +165,9 @@ export function BarChart({
         type: 'line',
         name: series2Name,
         data: series2.map((d) => d.y),
-        color: series2Color,
-        symbol: 'none',
+        color: overColor,
+        symbol: 'circle',
+        symbolSize: 4,
         lineStyle: { width: 1.5, type: 'solid' },
         yAxisIndex: 0,
       })
@@ -138,7 +178,7 @@ export function BarChart({
         data: ['MAE', series2Name],
         top: 12,
         left: 'left',
-        textStyle: { fontSize: 11, fontFamily: 'ui-monospace, monospace', color: 'var(--ink-muted)' },
+        textStyle: { fontSize: 11, fontFamily: 'ui-monospace, monospace', color: inkMutedColor },
       }
     }
 
@@ -150,7 +190,7 @@ export function BarChart({
       },
       series,
     }
-  }, [data, series2, series2Name, series2Color])
+  }, [data, series2, series2Name, overColor, accentColor, ruleColor, inkColor, inkMutedColor, paperColor])
 
   return (
     <div style={{ height }} className="w-full">
@@ -169,15 +209,21 @@ interface LineChartProps {
 export function LineChart({
   data,
   smooth = false,
-  color = 'var(--accent)',
+  color,
   height = 320,
 }: LineChartProps) {
   const { theme } = useTheme()
   const echartsTheme = getEChartsTheme(theme === 'dark')
 
+  const accentColor = useResolvedColor(color || '--accent')
+  const ruleColor = useResolvedColor('--rule')
+  const inkColor = useResolvedColor('--ink')
+  const inkMutedColor = useResolvedColor('--ink-muted')
+  const paperColor = useResolvedColor('--paper')
+
   const option = useCallback(() => {
     return {
-      ...baseOption({ bottom: 45, xLabelRotate: -45 }),
+      ...baseOption({ bottom: 45, xLabelRotate: -45, ruleColor, inkColor, inkMutedColor, paperColor }),
       xAxis: {
         ...baseOption({}).xAxis,
         data: data.map((d) => String(d.x)),
@@ -186,15 +232,16 @@ export function LineChart({
         {
           type: 'line',
           data: data.map((d) => d.y),
-          color,
-          symbol: 'none',
+          color: accentColor,
+          symbol: 'circle',
+          symbolSize: 4,
           lineStyle: { width: 1.5 },
           smooth,
           itemStyle: { borderWidth: 0 },
         },
       ],
     }
-  }, [data, smooth, color])
+  }, [data, smooth, accentColor, ruleColor, inkColor, inkMutedColor, paperColor])
 
   return (
     <div style={{ height }} className="w-full">
@@ -221,6 +268,13 @@ export function HistogramChart({
   const { theme } = useTheme()
   const echartsTheme = getEChartsTheme(theme === 'dark')
 
+  const accentColor = useResolvedColor('--accent')
+  const ruleColor = useResolvedColor('--rule')
+  const inkColor = useResolvedColor('--ink')
+  const inkMutedColor = useResolvedColor('--ink-muted')
+  const paperColor = useResolvedColor('--paper')
+  const overColor = useResolvedColor('--over')
+
   // Build histogram bars: bin centers and counts
   // bins = bin edges (n+1 values), counts = n values
   const barData = bins.slice(0, -1).map((b, i) => ({
@@ -236,8 +290,8 @@ export function HistogramChart({
         type: 'bar',
         name: 'Count',
         data: barData.map((d) => d.y),
-        color: 'var(--accent)',
-        barWidth: '90%',
+        color: accentColor,
+        barWidth: '100%',
         itemStyle: {
           borderRadius: [2, 2, 0, 0],
           opacity: 1,
@@ -250,26 +304,26 @@ export function HistogramChart({
       },
     ]
 
-    // Add zero line as a reference
+    // Add zero line as a reference (value 0 on y-axis)
     if (zeroLine) {
       series.push({
         type: 'line',
         name: 'Zero error',
         data: barData.map(() => 0),
-        color: 'var(--ink-muted)',
+        color: inkMutedColor,
         lineStyle: { width: 1, type: 'dashed' },
         symbol: 'none',
         z: 10,
       })
     }
 
-    // Add percentile markers
+    // Add percentile markers at their x-axis values
     markers.forEach((m) => {
       series.push({
         type: 'line',
         name: m.label,
         data: barData.map(() => m.value),
-        color: m.color || 'var(--over)',
+        color: m.color || overColor,
         lineStyle: { width: 1, type: 'dashed' },
         symbol: 'none',
         z: 10,
@@ -277,7 +331,7 @@ export function HistogramChart({
     })
 
     return {
-      ...baseOption({ bottom: 50 }),
+      ...baseOption({ bottom: 50, yFormatter: (v: number) => Math.round(v).toString(), ruleColor, inkColor, inkMutedColor, paperColor }),
       title: {
         text: 'Error distribution (MW)',
         left: 'left',
@@ -286,7 +340,7 @@ export function HistogramChart({
           fontSize: 16,
           fontWeight: 400,
           fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif',
-          color: 'var(--ink)',
+          color: inkColor,
         },
       },
       xAxis: {
@@ -304,7 +358,7 @@ export function HistogramChart({
       },
       series,
     }
-  }, [bins, counts, zeroLine, markers])
+  }, [bins, counts, zeroLine, markers, accentColor, ruleColor, inkColor, inkMutedColor, paperColor, overColor])
 
   return (
     <div style={{ height }} className="w-full flex flex-col items-center justify-center">
