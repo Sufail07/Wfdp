@@ -249,6 +249,7 @@ export function Accuracy() {
               </div>
               <div className="relative">
                 <BarChart
+                  key={`daily-${showBiasOnDaily ? 'with-bias' : 'no-bias'}`}
                   data={dailyData}
                   series2={showBiasOnDaily ? dailyBiasData : undefined}
                   series2Name="Bias"

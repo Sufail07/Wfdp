@@ -109,7 +109,15 @@ export function BarChart({
         data: data.map((d) => d.y),
         color: 'var(--accent)',
         barWidth: '50%',
-        itemStyle: { borderRadius: [2, 2, 0, 0] },
+        itemStyle: {
+          borderRadius: [2, 2, 0, 0],
+          opacity: 1,
+        },
+        emphasis: {
+          itemStyle: {
+            opacity: 0.85,
+          },
+        },
       },
     ]
 
@@ -213,13 +221,16 @@ export function HistogramChart({
   const { theme } = useTheme()
   const echartsTheme = getEChartsTheme(theme === 'dark')
 
-  const option = useCallback(() => {
-    // Build histogram bars: bin centers and counts
-    const barData = bins.map((b, i) => ({
-      x: Math.round(b),
-      y: counts[i] || 0,
-    }))
+  // Build histogram bars: bin centers and counts
+  // bins = bin edges (n+1 values), counts = n values
+  const barData = bins.slice(0, -1).map((b, i) => ({
+    x: Math.round((b + (bins[i + 1] ?? b)) / 2),
+    y: counts[i] || 0,
+  }))
 
+  const hasData = barData.some((d) => d.y > 0)
+
+  const option = useCallback(() => {
     const series: any[] = [
       {
         type: 'bar',
@@ -227,7 +238,15 @@ export function HistogramChart({
         data: barData.map((d) => d.y),
         color: 'var(--accent)',
         barWidth: '90%',
-        itemStyle: { borderRadius: [2, 2, 0, 0] },
+        itemStyle: {
+          borderRadius: [2, 2, 0, 0],
+          opacity: 1,
+        },
+        emphasis: {
+          itemStyle: {
+            opacity: 0.85,
+          },
+        },
       },
     ]
 
@@ -288,8 +307,15 @@ export function HistogramChart({
   }, [bins, counts, zeroLine, markers])
 
   return (
-    <div style={{ height }} className="w-full">
-      <ReactECharts option={option()} theme={echartsTheme} style={{ width: '100%', height: '100%' }} />
+    <div style={{ height }} className="w-full flex flex-col items-center justify-center">
+      {!hasData && (
+        <p className="text-xs font-mono text-ink-muted mt-4">
+          No error data available for this range.
+        </p>
+      )}
+      {hasData && (
+        <ReactECharts option={option()} theme={echartsTheme} style={{ width: '100%', height: '100%' }} />
+      )}
     </div>
   )
 }
