@@ -43,41 +43,6 @@ wind-forecast-portal/
 ├─ heroku.yml
 └─ .github/workflows/ci.yml
 ```
-wind-forecast-portal/
-├── api/index.py              # Vercel serverless entrypoint
-├── backend/                  # FastAPI backend
-│   ├── app/
-│   │   ├── api/              # API route handlers
-│   │   ├── domain/           # Core business logic (pure functions)
-│   │   ├── data/             # Data loading & snapshot management
-│   │   ├── config.py         # Pydantic settings
-│   │   └── main.py           # FastAPI app factory
-│   ├── ingest/               # Data ingestion CLI
-│   ├── data/snapshot/        # Parquet snapshot files (committed)
-│   ├── tests/                # Backend tests
-│   ├── Dockerfile
-│   └── pyproject.toml
-├── frontend/                 # React 18 + TypeScript + Vite
-│   ├── src/
-│   │   ├── components/       # Shared UI components
-│   │   ├── context/          # React context providers
-│   │   ├── features/         # Feature-specific components
-│   │   │   ├── brief/        # Decision Brief screen
-│   │   │   ├── accuracy/     # Forecast Accuracy screen
-│   │   │   └── method/       # Method & Data screen
-│   │   ├── hooks/            # Custom React hooks
-│   │   ├── api/              # Generated OpenAPI client
-│   │   └── utils/            # Utility functions
-│   ├── Dockerfile
-│   └── nginx.conf
-├── docs/
-│   ├── data-notes.md         # API exploration notes
-│   └── decisions.md          # Key technical decisions
-├── docker-compose.yml
-├── vercel.json
-├── heroku.yml
-└── .github/workflows/ci.yml
-```
 
 ## Quick Start (Local Development)
 
@@ -186,12 +151,7 @@ Elexon/BMRS data (FUELHH and WINDFOR) is governed by BMRS licence terms. Before 
 ## AI Tools Disclosure
 
 This project was developed with assistance from AI tools including:
-- GitHub Copilot for code completion and scaffolding
-- Kilo Code (agentic coding harness powered by NVIDIA Nemotron 3.5 Super VL) for architecture planning, frontend/backend implementation, debugging, and deployment guidance
-- General LLM assistance for boilerplate generation and documentation
+- Kilo Code (agentic coding harness powered by NVIDIA Nemotron 3.5 Super VL) for frontend/backend implementation, debugging, and deployment guidance.
+- Claude Sonnet 5.5 for system architecture design and reasoning.
 
-All code was reviewed and validated by human developers.
-
-## License
-
-MIT License - see LICENSE file for details.
+All code was reviewed and validated by myself.
