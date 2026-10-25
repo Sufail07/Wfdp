@@ -71,7 +71,7 @@ export function DecisionBrief() {
     }
   }
   const sentence = forecast?.forecasts?.length
-    ? `you expected ${valueText} ${unitText} of wind on average on ${cutoffDate}.`
+    ? `you expected ${valueText} ${unitText} of wind on average on ${deliveryDate}.`
     : ''
 
   const series = [
