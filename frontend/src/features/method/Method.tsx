@@ -59,11 +59,11 @@ export function Method() {
               <ul className="list-disc pl-6 font-mono text-context text-sm space-y-2">
                 <li className="flex gap-2">
                   <span className="font-semibold text-moment">FUELHH</span>
-                  <span>Half-hourly metered wind generation (actuals) from Elexon BM Reports</span>
+                  <span>Half-hourly metered wind generation (actuals) from Elexon Insights API</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="font-semibold text-moment">WINDFOR</span>
-                  <span>Wind generation forecasts with multiple vintages from Elexon BM Reports</span>
+                  <span>Wind generation forecasts with multiple vintages from Elexon Insights API</span>
                 </li>
               </ul>
             </div>
@@ -128,10 +128,16 @@ export function Method() {
                 <p className="font-mono text-context text-sm leading-relaxed mb-2">
                   <span className="font-semibold text-moment">Rows:</span> {meta.row_counts.fuelhh.toLocaleString()} FUELHH, {meta.row_counts.windfor.toLocaleString()} WINDFOR
                 </p>
+                {meta.data_source && (
+                  <p className="font-mono text-context text-sm leading-relaxed mb-2">
+                    <span className="font-semibold text-moment">Data Source:</span> {meta.data_source}
+                  </p>
+                )}
               </div>
             )}
           </div>
         )}
+
       </div>
 
       {isLoading && <LoadingSkeleton className="h-48 w-full" />}

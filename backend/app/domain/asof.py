@@ -28,7 +28,7 @@ def get_cutoff_utc(
     availability_lag_minutes: int = 0,
 ) -> pd.Timestamp:
     """
-    Get the cutoff timestamp in UTC for a delivery date.
+    Get the cutoff timestamp in UTC (tz-naive for consistent comparison).
 
     The cutoff is (delivery_date - 1 day) at cutoff_hour:cutoff_minute in London time,
     minus availability_lag_minutes to account for ingestion/publication lag.
@@ -46,7 +46,8 @@ def get_cutoff_utc(
     if availability_lag_minutes > 0:
         cutoff_utc = cutoff_utc - pd.Timedelta(minutes=availability_lag_minutes)
 
-    return pd.Timestamp(cutoff_utc)
+    # Return tz-naive for consistent comparison with stored data
+    return pd.Timestamp(cutoff_utc).tz_localize(None)
 
 
 def select_decision_forecast(
@@ -69,7 +70,7 @@ def select_decision_forecast(
     4. Add horizon_h = (startTime - publishTime) in hours
     
     Args:
-        forecasts_df: DataFrame with columns startTime, publishTime, forecastMW
+        forecasts_df: DataFrame with startTime, publishTime, forecastMW
         delivery_date: Delivery date (pandas Timestamp)
         cutoff_hour: Cutoff hour in London time (default 9)
         cutoff_minute: Cutoff minute in London time (default 0)
@@ -81,28 +82,34 @@ def select_decision_forecast(
     if forecasts_df.empty:
         return pd.DataFrame(columns=["startTime", "publishTime", "forecastMW", "horizon_h"])
 
-    # Ensure datetime columns
+    # Ensure datetime columns - normalize to tz-naive UTC for consistent comparison
     df = forecasts_df.copy()
-    df["startTime"] = pd.to_datetime(df["startTime"], utc=True)
-    df["publishTime"] = pd.to_datetime(df["publishTime"], utc=True)
+    if df["startTime"].dt.tz is not None:
+        df["startTime"] = df["startTime"].dt.tz_convert("UTC").dt.tz_localize(None)
+    if df["publishTime"].dt.tz is not None:
+        df["publishTime"] = df["publishTime"].dt.tz_convert("UTC").dt.tz_localize(None)
 
-    # Get cutoff in UTC
+    # Get cutoff in UTC (naive)
     cutoff_utc = get_cutoff_utc(
         delivery_date, cutoff_hour, cutoff_minute, tz, availability_lag_minutes
     )
+    if cutoff_utc.tzinfo is not None:
+        cutoff_utc = cutoff_utc.tz_localize(None)
 
     # Get London day boundaries for the delivery date
     london_tz = ZoneInfo(tz)
+    delivery_day = delivery_date.date() if hasattr(delivery_date, 'date') else delivery_date
+    
     delivery_day_start_london = pd.Timestamp(
-        datetime.combine(delivery_date.date(), time(0, 0)), tz=london_tz
+        datetime.combine(delivery_day, time(0, 0)), tz=london_tz
     )
     delivery_day_end_london = pd.Timestamp(
-        datetime.combine(delivery_date.date(), time(23, 59, 59)), tz=london_tz
+        datetime.combine(delivery_day, time(23, 59, 59)), tz=london_tz
     )
 
-    # Convert to UTC for comparison
-    day_start_utc = delivery_day_start_london.astimezone(ZoneInfo("UTC"))
-    day_end_utc = delivery_day_end_london.astimezone(ZoneInfo("UTC"))
+    # Convert to UTC naive for comparison
+    day_start_utc = delivery_day_start_london.astimezone(ZoneInfo("UTC")).tz_localize(None)
+    day_end_utc = delivery_day_end_london.astimezone(ZoneInfo("UTC")).tz_localize(None)
 
     # Filter: startTime on delivery_date (London day) AND publishTime <= cutoff_utc AND publishTime < startTime
     mask = (

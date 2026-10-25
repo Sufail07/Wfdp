@@ -46,6 +46,11 @@ async def get_decision_forecast(
 
     cutoff_utc = get_cutoff_utc(delivery_dt, cutoff_hour, cutoff_minute)
 
+    # Ensure cutoff_utc has UTC timezone for consistent API output
+    if cutoff_utc.tzinfo is None:
+        from zoneinfo import ZoneInfo
+        cutoff_utc = cutoff_utc.replace(tzinfo=ZoneInfo("UTC"))
+
     # Plausibility guard
     for _, row in result.iterrows():
         if row["forecastMW"] > settings.max_wind_mw:

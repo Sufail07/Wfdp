@@ -9,6 +9,8 @@ from pydantic import BaseModel
 class Manifest(BaseModel):
     fetch_time: str
     dataset_version: str | None = None
+    data_source: str | None = None
+    ingested_at: str | None = None
     row_counts: dict[str, int]
     checksums: dict[str, str]
 

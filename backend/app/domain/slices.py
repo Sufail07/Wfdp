@@ -19,7 +19,26 @@ def add_horizon_bucket(df: pd.DataFrame) -> pd.DataFrame:
 def add_hour_of_day(df: pd.DataFrame, tz: str = "Europe/London") -> pd.DataFrame:
     """Add hour of day in London time."""
     df = df.copy()
-    df["hour_of_day"] = df["startTime"].dt.tz_convert(tz).dt.hour
+    if df["startTime"].dt.tz is not None:
+        df["hour_of_day"] = df["startTime"].dt.tz_convert(tz).dt.hour
+    else:
+        # Assume UTC if tz-naive, convert to London
+        from zoneinfo import ZoneInfo
+        localized = df["startTime"].dt.tz_localize("UTC").dt.tz_convert(ZoneInfo(tz))
+        df["hour_of_day"] = localized.dt.hour
+    return df
+
+
+def add_delivery_date(df: pd.DataFrame, tz: str = "Europe/London") -> pd.DataFrame:
+    """Add delivery date in London time."""
+    df = df.copy()
+    if df["startTime"].dt.tz is not None:
+        df["delivery_date"] = df["startTime"].dt.tz_convert(tz).dt.date
+    else:
+        # Assume UTC if tz-naive
+        from zoneinfo import ZoneInfo
+        localized = df["startTime"].dt.tz_localize("UTC").dt.tz_convert(ZoneInfo(tz))
+        df["delivery_date"] = localized.dt.date
     return df
 
 
@@ -98,16 +117,24 @@ def compute_by_horizon_all_vintages(windfor_df: pd.DataFrame, fuelhh_df: pd.Data
     """
     from app.domain.errors import join_forecast_actual
 
-    from_dt = pd.Timestamp(from_date).tz_localize("UTC")
-    to_dt = pd.Timestamp(to_date).tz_localize("UTC")
+    from_dt = pd.Timestamp(from_date)
+    to_dt = pd.Timestamp(to_date)
+
+    # Normalize timestamps for comparison - handle both tz-aware and tz-naive
+    df = windfor_df.copy()
+    if df['startTime'].dt.tz is not None:
+        df['startTime'] = df['startTime'].dt.tz_convert('UTC').dt.tz_localize(None)
+        df['publishTime'] = df['publishTime'].dt.tz_convert('UTC').dt.tz_localize(None)
+        from_dt = from_dt.tz_localize(None) if from_dt.tzinfo else from_dt
+        to_dt = to_dt.tz_localize(None) if to_dt.tzinfo else to_dt
 
     # All vintages whose startTime falls in the date range
     mask = (
-        (windfor_df['startTime'] >= from_dt) &
-        (windfor_df['startTime'] <= to_dt + pd.Timedelta(days=1)) &
-        (windfor_df['publishTime'] < windfor_df['startTime'])
+        (df['startTime'] >= from_dt) &
+        (df['startTime'] <= to_dt + pd.Timedelta(days=1)) &
+        (df['publishTime'] < df['startTime'])
     )
-    vintages = windfor_df[mask].copy()
+    vintages = df[mask].copy()
 
     if vintages.empty:
         return pd.DataFrame()
@@ -129,7 +156,13 @@ def compute_by_horizon_all_vintages(windfor_df: pd.DataFrame, fuelhh_df: pd.Data
 def add_delivery_date(df: pd.DataFrame, tz: str = "Europe/London") -> pd.DataFrame:
     """Add delivery date in London time."""
     df = df.copy()
-    df["delivery_date"] = df["startTime"].dt.tz_convert(tz).dt.date
+    if df["startTime"].dt.tz is not None:
+        df["delivery_date"] = df["startTime"].dt.tz_convert(tz).dt.date
+    else:
+        # Assume UTC if tz-naive
+        from zoneinfo import ZoneInfo
+        localized = df["startTime"].dt.tz_localize("UTC").dt.tz_convert(ZoneInfo(tz))
+        df["delivery_date"] = localized.dt.date
     return df
 
 

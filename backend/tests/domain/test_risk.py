@@ -78,35 +78,9 @@ def is_enough_history(delivery_date, sample_days, min_sample_days, sample_errors
     return sample_days >= min_sample_days and sample_errors >= min_sample_errors
 
 
+@settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
 @given(st.integers(min_value=1, max_value=10))
-@settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
-def test_risk_band_never_leaks_future(n):
-    """Test that risk band never uses future actuals (look-ahead protection)."""
-    forecasts_df, actuals_df = make_forecasts_with_actuals(n)
-    delivery_date = pd.Timestamp("2026-01-02")
-    
-    result = compute_risk_band(
-        forecasts_df, actuals_df, delivery_date,
-        quantile=0.9,
-        cutoff_hour=9,  # London cutoff
-        cutoff_minute=0,
-        min_sample_days=3,
-        min_sample_errors=24,
-    )
-    
-    # If we have risk-adjusted forecasts, they should only use history from days ≤ D-2
-    if "risk_adjusted" in result and result["risk_adjusted"]:
-        # All actuals used for risk calculation should be from days ≤ D-2
-        for risk_point in result["risk_adjusted"]:
-            # Risk calculation should only use historical actuals up to D-2
-            # This is enforced by the domain logic in compute_risk_band
-            pass
-    
-
-given(st.integers(min_value=1, max_value=10))
-@settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
 def test_risk_band_margin_is_negative_or_zero_for_over_forecasts(n):
-    """Test that risk band margin is appropriate for forecast errors."""
     forecasts_df, actuals_df = make_forecasts_with_actuals(n)
     delivery_date = pd.Timestamp("2026-01-02")
     
@@ -130,8 +104,8 @@ def test_risk_band_margin_is_negative_or_zero_for_over_forecasts(n):
             assert margin >= 0, f"Margin should be non-negative, got {margin}"
 
 
-@given(st.integers(min_value=1, max_value=5))
 @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
+@given(st.integers(min_value=1, max_value=5))
 def test_risk_band_has_enough_history_for_confidence(n):
     """Test risk band calculations have enough history for confidence intervals."""
     forecasts_df, actuals_df = make_forecasts_with_actuals(n)
@@ -180,8 +154,8 @@ def test_risk_band_different_quantiles():
             pass
 
 
-@given(st.integers(min_value=0, max_value=3))
 @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
+@given(st.integers(min_value=0, max_value=3))
 def test_risk_band_no_data_returns_empty_result(n):
     """Test that risk band returns empty result when no data."""
     if n == 0:

@@ -6,6 +6,15 @@ import numpy as np
 import pandas as pd
 
 
+def _safe_tz_convert(series: pd.Series, tz: str = "Europe/London") -> pd.Series:
+    """Safely convert timezone, handling both tz-aware and tz-naive data."""
+    if series.dt.tz is not None:
+        return series.dt.tz_convert(tz)
+    # Assume UTC if tz-naive
+    from zoneinfo import ZoneInfo
+    return series.dt.tz_localize("UTC").dt.tz_convert(ZoneInfo(tz))
+
+
 def _effective_sample_size(errors: np.ndarray, n_days: int) -> float:
     """Estimate effective sample size accounting for within-day autocorrelation.
 
@@ -57,7 +66,7 @@ def block_bootstrap_ci(
 
     # Group by delivery date
     if "delivery_date" not in valid.columns:
-        valid["delivery_date"] = valid["startTime"].dt.tz_convert("Europe/London").dt.date
+        valid["delivery_date"] = _safe_tz_convert(valid["startTime"]).dt.date
 
     days = sorted(valid["delivery_date"].unique())
     n_days = len(days)
@@ -190,7 +199,7 @@ def compute_metrics(aligned_pairs: pd.DataFrame) -> dict[str, Any]:
         n_days = aligned_pairs["delivery_date"].nunique()
     else:
         valid_copy = valid.copy()
-        valid_copy["delivery_date"] = valid_copy["startTime"].dt.tz_convert("Europe/London").dt.date
+        valid_copy["delivery_date"] = _safe_tz_convert(valid_copy["startTime"]).dt.date
         n_days = valid_copy["delivery_date"].nunique()
 
     bias_ci = block_bootstrap_ci(valid, lambda df: float(np.mean(df["errorMW"])))
@@ -318,7 +327,7 @@ def compute_metrics_by_group(
                     n_days = group_df["delivery_date"].nunique()
                 else:
                     valid_copy = valid.copy()
-                    valid_copy["delivery_date"] = valid_copy["startTime"].dt.tz_convert("Europe/London").dt.date
+                    valid_copy["delivery_date"] = _safe_tz_convert(valid_copy["startTime"]).dt.date
                     n_days = valid_copy["delivery_date"].nunique()
 
                 metrics = {

@@ -21,6 +21,7 @@ class MetaResponse(BaseModel):
     timezone: str
     snapshot_id: str
     dataset_version: str | None = None
+    data_source: str | None = None
     row_counts: dict[str, int]
     assumptions: list[str]
     caveats: list[str]

@@ -2,262 +2,148 @@
 """
 Data Ingestion Script for Wind Forecast Decision Portal
 
-This script attempts to ingest real data from Elexon APIs, with fallback to
-synthetic data for development and testing purposes.
+Ingests real data from the Elexon Insights API (https://data.elexon.co.uk/bmrs/api/v1).
+No API key required.
 
-The ingestion follows the plan requirements:
-- WINDFOR forecasts: 30-31 Dec 2026
-- FUELHH actuals: through 1 Feb 2026
-- If real data unavailable: synthetic data with clear disclosure
+The ingestion fetches:
+- FUELHH: half-hourly wind generation actuals
+- WINDFOR: wind generation forecasts with multiple vintages
+
+Run: python ingest.py --from 2026-12-30 --to 2026-02-01
 """
 
-import os
-import json
-import httpx
+import sys
 from datetime import date, datetime
 from pathlib import Path
+
 import pandas as pd
-import sys
 
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent / "backend"))
 
-from backend.ingest.generate_mock import generate_mock_fuelhh, generate_mock_windfor
+from backend.ingest.insights import ElexonInsightsClient
 from backend.ingest.snapshot import write_snapshot
-
-# Configuration
-ELEXON_API_BASE = "https://api.bmreports.com/BMRS"
-ELEXON_INSIGHTS_BASE = "https://data.elexon.co.uk/api/v1"
-API_KEY = os.getenv("ELEXON_API_KEY", "demo")
-
-TIMEOUT = 30.0
-
-def probe_elexon_insights() -> bool:
-    """Probe Elexon Insights API to check availability."""
-    print("Probing Elexon Insights API...")
-    
-    # Test endpoints that might exist
-    test_endpoints = [
-        "/ windforecasts",
-        "/fuelh ",
-        "/system/status"
-    ]
-    
-    try:
-        with httpx.Client(timeout=10.0) as client:
-            for endpoint in test_endpoints:
-                url = f"{ELEXON_INSIGHTS_BASE}{endpoint}"
-                try:
-                    resp = client.get(url, headers={"x-api-key": API_KEY})
-                    if resp.status_code == 200:
-                        print(f"  ✓ Insights API available at {endpoint}")
-                        return True
-                except Exception:
-                    continue
-        
-        print("  ✗ Insights API not available or undocumented endpoints")
-        return False
-    except Exception as e:
-        print(f"  ✗ Error probing Insights API: {e}")
-        return False
+from backend.ingest.validate import (
+    validate_fuelhh,
+    validate_windfor,
+    validate_publish_before_start,
+    validate_30min_grid,
+)
 
 
-def probe_old_api() -> bool:
-    """Probe the old BMRS API."""
-    print("Probing old BMRS API...")
-    
-    # Try to discover available endpoints
-    try:
-        with httpx.Client(timeout=10.0) as client:
-            # Try to get service info or list endpoints
-            url = f"{ELEXON_API_BASE}/service"
-            resp = client.get(url, params={"APIKey": API_KEY, "ServiceType": "json"})
-            
-            if resp.status_code == 200:
-                data = resp.json()
-                print(f"  ✓ Old BMRS API available: {data}")
-                
-                # Try to discover endpoints
-                print("  Discovering endpoints...")
-                return True
-            else:
-                print(f"  ✗ Old BMRS API returned status: {resp.status_code}")
-                return False
-    except Exception as e:
-        print(f"  ✗ Error probing old API: {e}")
-        return False
+def parse_date(date_str: str) -> date:
+    return datetime.strptime(date_str, "%Y-%m-%d").date()
 
 
-def fetch_with_new_api(from_date: date, to_date: date) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Fetch data from new Elexon Insights API."""
-    print(f"Fetching data from Insights API: {from_date} to {to_date}")
-    
-    # This is a placeholder implementation
-    # In reality, you'd need to know the exact endpoints and data format
-    # for the Elexon Insights API
-    
-    # Simulate fetching and parsing
-    # WINDFOR format typically has: startTime, publishTime, forecastMW
-    # FUELHH format typically has: settlementDate, settlementPeriod, fuelType, generationMW
-    
-    # For now, return empty DataFrames to indicate no data available
-    # The caller will fall back to synthetic data
-    return pd.DataFrame(), pd.DataFrame()
+def main() -> None:
+    import argparse
 
+    parser = argparse.ArgumentParser(
+        description="Ingest real Elexon Insights data for the Wind Forecast Decision Portal"
+    )
+    parser.add_argument(
+        "--from", dest="from_date", required=True,
+        help="Start date (YYYY-MM-DD) - for WINDFOR forecasts",
+    )
+    parser.add_argument(
+        "--to", dest="to_date", required=True,
+        help="End date (YYYY-MM-DD) - for FUELHH actuals",
+    )
+    parser.add_argument(
+        "--snapshot-path",
+        type=Path,
+        default=Path(__file__).parent / "backend" / "data" / "snapshot",
+        help="Path to snapshot directory",
+    )
+    args = parser.parse_args()
 
-def fetch_with_old_api(from_date: date, to_date: date) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Fetch data from old BMRS API."""
-    print(f"Fetching data from old BMRS API: {from_date} to {to_date}")
-    
-    try:
-        with httpx.Client(timeout=TIMEOUT) as client:
-            # Fetch FUELHH
-            fuelhh_url = f"{ELEXON_API_BASE}/B1620/v1"
-            fuelhh_params = {
-                "APIKey": API_KEY,
-                "ServiceType": "json",
-                "FromDate": from_date.isoformat(),
-                "ToDate": to_date.isoformat(),
-                "FuelType": "WIND"
-            }
-            
-            fuelhh_resp = client.get(fuelhh_url, params=fuelhh_params)
-            fuelhh_resp.raise_for_status()
-            fuelhh_data = fuelhh_resp.json()
-            
-            # Fetch WINDFOR
-            windfor_url = f"{ELEXON_API_BASE}/B1830/v1"
-            windfor_params = {
-                "APIKey": API_KEY,
-                "ServiceType": "json",
-                "FromDate": from_date.isoformat(),
-                "ToDate": to_date.isoformat()
-            }
-            
-            windfor_resp = client.get(windfor_url, params=windfor_params)
-            windfor_resp.raise_for_status()
-            windfor_data = windfor_resp.json()
-            
-            # Convert to DataFrames
-            fuelhh_df = pd.DataFrame(fuelhh_data.get("data", []))
-            windfor_df = pd.DataFrame(windfor_data.get("data", []))
-            
-            # Parse dates
-            fuelhh_df["settlementDate"] = pd.to_datetime(fuelhh_df["settlementDate"])
-            windfor_df["startTime"] = pd.to_datetime(windfor_df["startTime"], utc=True)
-            windfor_df["publishTime"] = pd.to_datetime(windfor_df["publishTime"], utc=True)
-            
-            print(f"  ✓ Fetched {len(fuelhh_df)} FUELHH records")
-            print(f"  ✓ Fetched {len(windfor_df)} WINDFOR records")
-            
-            return fuelhh_df, windfor_df
-            
-    except Exception as e:
-        print(f"  ✗ Error fetching from old API: {e}")
-        raise
+    from_d = parse_date(args.from_date)
+    to_d = parse_date(args.to_date)
 
+    if from_d > to_d:
+        parser.error("--from must be before --to")
 
-def main():
     print("=" * 70)
-    print("WIND FORECAST DATA INGESTION")
+    print("WIND FORECAST DATA INGESTION - ELEXON INSIGHTS API")
     print("=" * 70)
-    print(f"Target range: Dec 30-31 (forecasts), Jan 1 (actuals)")
-    print(f"API Base: {ELEXON_API_BASE}")
-    print(f"API Key: {API_KEY}")
+    print(f"API Base: https://data.elexon.co.uk/bmrs/api/v1")
+    print(f"WINDFOR forecasts: {from_d} to {to_d}")
+    print(f"FUELHH actuals: {from_d} to {to_d}")
     print()
-    
-    # Parse target dates from plan
-    target_from = date(2026, 12, 30)  # Dec 30 for forecasts
-    target_to_fuelhh = date(2026, 2, 1)  # Jan 1 for actuals
-    
-    print(f"Target dates:")
-    print(f"  - WINDFOR forecasts: {target_from}")
-    print(f"  - FUELHH actuals: through {target_to_fuelhh}")
-    print()
-    
-    # Check API availability
-    print("API Availability Check:")
+
+    # Fetch data
+    print("Fetching from Elexon Insights API...")
     print("-" * 70)
-    
-    insights_available = probe_elexon_insights()
-    old_api_available = probe_old_api()
-    
+
+    with ElexonInsightsClient() as client:
+        fuelhh_raw = client.fetch_fuelhh(from_d, to_d)
+        windfor_raw = client.fetch_windfor(from_d, to_d)
+
+    if not fuelhh_raw:
+        raise SystemExit("ERROR: No FUELHH data fetched from Elexon Insights API")
+    if not windfor_raw:
+        raise SystemExit("ERROR: No WINDFOR data fetched from Elexon Insights API")
+
+    print(f"  Fetched {len(fuelhh_raw)} FUELHH records")
+    print(f"  Fetched {len(windfor_raw)} WINDFOR records")
     print()
-    
-    # Determine data source and fetch
-    print("Data Fetching:")
+
+    # Convert to DataFrames
+    fuelhh_df = pd.DataFrame(fuelhh_raw)
+    windfor_df = pd.DataFrame(windfor_raw)
+
+    # Map Elexon API field names to internal schema names
+    fuelhh_df = fuelhh_df.rename(columns={"generation": "generationMW"})
+    windfor_df = windfor_df.rename(columns={"generation": "forecastMW"})
+
+    # Drop metadata columns not in schema
+    fuelhh_df = fuelhh_df[["settlementDate", "settlementPeriod", "fuelType", "generationMW"]]
+    windfor_df = windfor_df[["startTime", "publishTime", "forecastMW"]]
+
+# Parse dates - Elexon API returns UTC timestamps
+    # Keep settlementDate as UTC midnight for consistency with domain logic
+    fuelhh_df["settlementDate"] = pd.to_datetime(
+        fuelhh_df["settlementDate"]
+    ).dt.tz_localize("UTC")
+    windfor_df["startTime"] = pd.to_datetime(windfor_df["startTime"], utc=True)
+    windfor_df["publishTime"] = pd.to_datetime(windfor_df["publishTime"], utc=True)
+
+    # Validate
+    print("Validating...")
     print("-" * 70)
-    
-    if insights_available:
-        print("Using Elexon Insights API (new API)")
-        try:
-            fuelhh_df, windfor_df = fetch_with_new_api(target_from, target_to_fuelhh)
-        except Exception:
-            print("  ✗ Insights API failed, falling back to old API")
-            fuelhh_df, windfor_df = fetch_with_old_api(target_from, target_to_fuelhh)
-    elif old_api_available:
-        print("Using old BMRS API")
-        fuelhh_df, windfor_df = fetch_with_old_api(target_from, target_to_fuelhh)
-    else:
-        print("Both APIs unavailable, using synthetic data")
-        
-        # Generate synthetic data
-        print("Generating synthetic data...")
-        fuelhh_df = generate_mock_fuelhh()
-        windfor_df = generate_mock_windfor()
-        
-        # Filter to target dates
-        fuelhh_df = fuelhh_df[
-            (fuelhh_df["settlementDate"] >= target_from) & 
-            (fuelhh_df["settlementDate"] <= target_to_fuelhh)
-        ]
-        
-        windfor_df = windfor_df[
-            (windfor_df["startTime"].dt.date >= target_from) & 
-            (windfor_df["startTime"].dt.date <= target_to_fuelhh)
-        ]
-        
-        print(f"  ✓ Generated {len(fuelhh_df)} synthetic FUELHH records")
-        print(f"  ✓ Generated {len(windfor_df)} synthetic WINDFOR records")
-    
+
+    fuelhh_df = validate_fuelhh(fuelhh_df)
+    print(f"  FUELHH validation passed ({len(fuelhh_df)} rows)")
+
+    windfor_df = validate_windfor(windfor_df)
+    windfor_df = validate_publish_before_start(windfor_df)
+    windfor_df = validate_30min_grid(windfor_df, "startTime")
+    print(f"  WINDFOR validation passed ({len(windfor_df)} rows)")
+    print()
+
     # Write snapshot
-    print()
-    print("Writing Snapshot:")
+    print("Writing snapshot...")
     print("-" * 70)
-    
-    snapshot_path = Path(__file__).parent / "data" / "snapshot"
-    snapshot_path.mkdir(parents=True, exist_ok=True)
-    
-    manifest = write_snapshot(fuelhh_df, windfor_df, snapshot_path)
-    
+
+    args.snapshot_path.mkdir(parents=True, exist_ok=True)
+
+    dataset_version = f"elexon-insights-{from_d.isoformat()}-to-{to_d.isoformat()}"
+    manifest = write_snapshot(
+        fuelhh_df, windfor_df, args.snapshot_path,
+        data_source="elexon_insights",
+        dataset_version=dataset_version,
+    )
+
+    print(f"  Snapshot written to: {args.snapshot_path}")
+    print(f"  Manifest: {manifest}")
     print()
+
     print("=" * 70)
-    print(f"INGESTION COMPLETE")
+    print("INGESTION COMPLETE")
     print("=" * 70)
-    print(f"Snapshot written to: {snapshot_path}")
-    print(f"Manifest: {manifest}")
-    print()
-    print("Note: Data has been committed to the repository.")
-    print("If real data is available from Elexon APIs, replace the synthetic data")
-    print("by running the ingestion with real API credentials.")
-    print("=" * 70)
-    
-    # Update manifest to reflect data source
-    manifest_path = snapshot_path / "manifest.json"
-    if manifest_path.exists():
-        with open(manifest_path, "r") as f:
-            manifest_data = json.load(f)
-        
-        # Add data source info
-        manifest_data["data_source"] = "synthetic" if (fuelhh_df.empty or windfor_df.empty) else "elexon_api"
-        
-        # Add ingestion timestamp
-        manifest_data["ingested_at"] = datetime.now().isoformat()
-        
-        with open(manifest_path, "w") as f:
-            json.dump(manifest_data, f, indent=2)
-        
-        print("Updated manifest.json with data source and ingestion timestamp")
+    print(f"Data source: Elexon Insights API (real data)")
+    print(f"FUELHH rows: {len(fuelhh_df)}")
+    print(f"WINDFOR rows: {len(windfor_df)}")
 
 
 if __name__ == "__main__":

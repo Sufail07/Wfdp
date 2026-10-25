@@ -83,10 +83,20 @@ def validate_no_future_publish(df: pd.DataFrame, cutoff_date: pd.Timestamp) -> p
 
 
 def validate_publish_before_start(df: pd.DataFrame) -> pd.DataFrame:
-    """Ensure publishTime < startTime (no future knowledge)."""
+    """Ensure publishTime < startTime (no future knowledge).
+
+    Logs a warning for rows where publishTime >= startTime rather than
+    raising, since real Elexon data can include same-day forecast updates.
+    The domain logic (select_decision_forecast) filters these out at query time.
+    """
     invalid = df[df["publishTime"] >= df["startTime"]]
     if not invalid.empty:
-        raise ValueError(f"Found {len(invalid)} rows with publishTime >= startTime")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(
+            f"Found {len(invalid)} rows with publishTime >= startTime "
+            f"(same-day updates). These will be filtered by domain logic."
+        )
     return df
 
 

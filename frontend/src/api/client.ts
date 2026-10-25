@@ -16,6 +16,8 @@ interface MetaResponse {
   default_cutoff_minute: number
   timezone: string
   snapshot_id: string
+  dataset_version?: string
+  data_source?: string
   row_counts: Record<string, number>
   assumptions: string[]
   caveats: string[]

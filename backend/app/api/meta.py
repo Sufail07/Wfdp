@@ -38,14 +38,21 @@ async def get_meta():
     snapshot_path = settings.snapshot_path
     snapshot = load_snapshot(snapshot_path)
 
+    # Derive coverage from actual data
+    fuelhh_min = snapshot.fuelhh["settlementDate"].min()
+    fuelhh_max = snapshot.fuelhh["settlementDate"].max()
+    coverage_start = fuelhh_min.date() if hasattr(fuelhh_min, "date") else fuelhh_min
+    coverage_end = fuelhh_max.date() if hasattr(fuelhh_max, "date") else fuelhh_max
+
     return MetaResponse(
-        coverage_start=date(2026, 1, 1),
-        coverage_end=date(2026, 2, 1),
+        coverage_start=coverage_start,
+        coverage_end=coverage_end,
         default_cutoff_hour=settings.cutoff_hour,
         default_cutoff_minute=settings.cutoff_minute,
         timezone=settings.timezone,
         snapshot_id=snapshot.manifest.fetch_time,
         dataset_version=snapshot.manifest.dataset_version,
+        data_source=snapshot.manifest.data_source,
         row_counts=snapshot.manifest.row_counts,
         assumptions=ASSUMPTIONS,
         caveats=CAVEATS,

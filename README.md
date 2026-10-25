@@ -150,73 +150,50 @@ npm run dev
 
 ## Data Source
 
-This dataset contains **synthetic mock data** for demonstration purposes only. Real Elexon data is not currently available through the legacy BMRS API (api.bmreports.com), which has been superseded by the Elexon Insights API.
+This dataset contains **real data** from the Elexon Insights API (`https://data.elexon.co.uk/bmrs/api/v1`).
 
 ### Data Ingestion System
 
-A robust ingestion system has been implemented with the following architecture:
+A robust ingestion system fetches real data from the Elexon Insights API:
 
 **Primary Ingestion Script**: `ingest.py`
-- Attempts to fetch real data from both legacy BMRS API and Elexon Insights API
-- Falls back to synthetic data generation if real APIs are unavailable
+- Fetches real data from the Elexon Insights API (no API key required)
+- FUELHH: half-hourly wind generation actuals via `GET /datasets/FUELHH`
+- WINDFOR: wind generation forecasts via `GET /datasets/WINDFOR`
 - Maintains proper documentation of data source in `manifest.json`
 
-**Legacy Ingestion**: `backend/ingest/cli.py` (typer CLI)
-- Uses the old BMRS API (`api.bmreports.com/BMRS`)
-- Endpoints: B1620 (FUELHH), B1830 (WINDFOR)
-- Has 0% test coverage (to be added as part of test suite fixes)
+**CLI Ingestion**: `backend/ingest/cli.py` (typer CLI)
+- Uses the Elexon Insights API (`data.elexon.co.uk/bmrs/api/v1`)
+- Datasets: FUELHH (actuals), WINDFOR (forecasts)
+- Has fallback to synthetic data for development only
 
 **Key Features**:
-- Attempts real API calls first
-- Graceful fallback to synthetic data
+- Real API data ingestion
 - Proper manifest documentation with data source
 - Command-line interface for running ingestion
 - Validation of data quality
 
 ### Current Data Status
 
-**Data source**: Synthetic mock data for demonstration purposes only. Real Elexon data not available.
+**Data source**: Real Elexon Insights API data
 
 **What this means**:
-- All forecasts and actuals are generated independently (no real correlation)
-- Forecast accuracy values reflect the synthetic data characteristics
-- Risk band calculations are based on synthetic error distributions
-- All UI elements display "Data Disclaimer: This dataset contains synthetic mock data..."
-
-**For production deployment**:
-1. Obtain Elexon API credentials for the Insights API (`data.elexon.co.uk`)
-2. Set `ELEXON_API_KEY` environment variable
-3. Run the ingestion script: `python ingest.py`
-4. The system will then fetch real data and replace the synthetic snapshot
+- All forecasts and actuals are from the Elexon Insights API
+- Forecast accuracy values reflect real data characteristics
+- Risk band calculations are based on real error distributions
 
 ### Command Line Usage
 
 ```bash
-# Run ingestion with default settings
-python ingest.py
+# Run ingestion with real Elexon data
+python ingest.py --from 2026-01-01 --to 2026-01-31
 
-# Use custom API key
-python ingest.py --api-key "your-api-key"
+# Use the CLI
+python -m backend.ingest.cli refresh --from 2026-01-01 --to 2026-01-31
 
-# Show ingestion status
+# Check ingestion status
 python -m backend.ingest.cli status
-
-# Refresh snapshot with real API (if available)
-python -m backend.ingest.cli refresh --from 2026-12-30 --to 2026-12-31
 ```
-
-**If real data is available**:
-- System will automatically use it
-- Manifest will show `"data_source": "elexon_api"`
-- All calculations based on real Elexon data
-- Full transparency about data provenance
-
-
-**If real data is unavailable**:
-- System falls back to synthetic data generation
-- Manifest will show `"data_source": "synthetic"`
-- Clear documentation that data is synthetic for demonstration purposes
-- All existing functionality preserved with proper disclaimers
 
 ### Note for reviewer
 The recorded video does not contain latest optimizations applied.

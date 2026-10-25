@@ -1,13 +1,15 @@
 {
-  "fetch_time": "2026-10-24T16:03:18.542377+00:00",
-  "dataset_version": "elexon-bmrs-2026-01-synthetic",
+  "fetch_time": "2026-10-25T12:41:17.004735+00:00",
+  "dataset_version": "elexon-insights-2026-01-01-to-2026-01-31",
+  "data_source": "elexon_insights",
+  "ingested_at": "2026-10-25T12:41:17.004782+00:00",
   "row_counts": {
     "fuelhh": 1488,
-    "windfor": 10416
+    "windfor": 18104
   },
   "checksums": {
-    "fuelhh": "1993d8a721af68f5eebbae98bd7a3565eb6d978817df678d3b3f9b6550da1b79",
-    "windfor": "e63b213198bf5b21437799c30f58c8ebdf47c4b8b3ca7bd20c2189fa575bfa55"
+    "fuelhh": "1244fe349938612bcc4c1443453c4c4e0fef3d27568c84730d3b11bdedd0c7fe",
+    "windfor": "f3a365e1836bd17592312543b19abdf8b75c4255d7e8f691821fee3d26e60259"
   },
   "date_ranges": {
     "fuelhh": {
@@ -15,8 +17,8 @@
       "max": "2026-01-31T00:00:00"
     },
     "windfor": {
-      "min": "2026-01-02T00:00:00+00:00",
-      "max": "2026-02-01T23:30:00+00:00"
+      "min": "2025-12-31T21:00:00",
+      "max": "2026-02-02T21:00:00"
     }
   }
 }

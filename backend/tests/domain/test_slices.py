@@ -44,7 +44,8 @@ def test_empty_buckets_preserved():
 
 def test_publish_after_start_excluded():
     """join_forecast_actual joins all forecast-actual pairs on startTime;
-    publishTime >= startTime exclusion happens in select_decision_forecast."""
+    publishTime >= startTime exclusion happens in select_decision_forecast.
+    """
     windfor = pd.DataFrame([
         {"startTime": pd.Timestamp("2026-01-02 10:00", tz="UTC"),
          "publishTime": pd.Timestamp("2026-01-02 09:00", tz="UTC"),
@@ -63,7 +64,7 @@ def test_publish_after_start_excluded():
     aligned = join_forecast_actual(windfor, fuelhh)
     # Both forecasts join to the same actual (same startTime)
     assert len(aligned) == 2
-    assert all(aligned["startTime"] == pd.Timestamp("2026-01-02 10:00", tz="UTC"))
+    assert all(aligned["startTime"] == pd.Timestamp("2026-01-02 10:00:00"))
 
 
 def test_select_decision_forecast_excludes_post_cutoff():

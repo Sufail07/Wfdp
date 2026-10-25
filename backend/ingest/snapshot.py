@@ -21,6 +21,8 @@ def write_snapshot(
     fuelhh: pd.DataFrame,
     windfor: pd.DataFrame,
     snapshot_path: Path,
+    data_source: str = "elexon_insights",
+    dataset_version: str | None = None,
 ) -> dict[str, Any]:
     """Write Parquet files and generate manifest."""
     snapshot_path.mkdir(parents=True, exist_ok=True)
@@ -36,6 +38,9 @@ def write_snapshot(
     # Generate manifest
     manifest = {
         "fetch_time": datetime.now(timezone.utc).isoformat(),
+        "dataset_version": dataset_version,
+        "data_source": data_source,
+        "ingested_at": datetime.now(timezone.utc).isoformat(),
         "row_counts": {
             "fuelhh": len(fuelhh),
             "windfor": len(windfor),
