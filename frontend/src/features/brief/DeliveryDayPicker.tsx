@@ -18,7 +18,7 @@ export function DeliveryDayPicker({ value, onChange, min, max }: DeliveryDayPick
         max={max}
         className="input"
       />
-      <p className="text-caption text-context mt-1">
+      <p className="text-xs font-mono text-context mt-1.5">
         Select the delivery day D. Cutoff defaults to D-1 09:00 London.
       </p>
     </div>

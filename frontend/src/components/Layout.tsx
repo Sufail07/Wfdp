@@ -13,23 +13,23 @@ export function Layout({ children }: { children: ReactNode }) {
   ]
 
   return (
-    <div className="min-h-screen bg-bg text-moment">
-      <header className="sticky top-0 z-50 border-b border-color">
+    <div className="min-h-screen bg-bg text-moment flex flex-col">
+      <header className="sticky top-0 z-50 border-b border-color bg-bg/95 backdrop-blur supports-[backdrop-blur]:bg-bg/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-8">
-              <Link to="/" className="font-serif text-display text-moment tracking-tight">
+              <Link to="/" className="font-serif text-moment text-xl font-semibold tracking-tight">
                 Wind Forecast Portal
               </Link>
-              <nav className="hidden md:flex items-center gap-6 text-data">
+              <nav className="hidden md:flex items-center gap-6 text-sm">
                 {navItems.map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`text-data transition-colors ${
+                    className={`text-context transition-colors font-medium ${
                       location.pathname === item.path
-                        ? 'font-semibold text-moment'
-                        : 'text-context hover:text-moment'
+                        ? 'text-moment'
+                        : 'hover:text-moment'
                     }`}
                   >
                     {item.label}
@@ -39,7 +39,7 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
             <button
               onClick={toggleTheme}
-              className="p-2 rounded border border-color text-context hover:text-moment transition-colors bg-transparent"
+              className="p-2 rounded border border-color text-context hover:text-moment hover:bg-surface transition-colors bg-transparent"
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
               {theme === 'light' ? (
@@ -55,11 +55,11 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 w-full">
         {children}
       </main>
-      <footer className="border-t border-color py-6 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-caption text-context">
+      <footer className="border-t border-color py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-caption text-context-light">
           Wind Forecast Decision Portal &copy; 2026
         </div>
       </footer>

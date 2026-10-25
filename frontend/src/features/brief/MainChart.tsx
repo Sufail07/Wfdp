@@ -21,7 +21,7 @@ export function MainChart({
     {
       name: 'Decision Forecast',
       data: decisionForecast,
-      color: '#111827',
+      color: '#0f172a',
     },
   ]
 
@@ -29,7 +29,7 @@ export function MainChart({
     series.push({
       name: 'Risk-Adjusted',
       data: riskAdjusted,
-      color: '#6b7280',
+      color: '#64748b',
     })
   }
 
@@ -37,19 +37,21 @@ export function MainChart({
     series.push({
       name: 'Actuals',
       data: actuals,
-      color: '#9ca3af',
+      color: '#94a3b8',
     })
   }
 
   return (
     <div className="card">
-      <h3 className="font-serif font-semibold text-moment mb-4">{title}</h3>
-      <MultiLineChart
-        series={series}
-        yAxisLabel="MW"
-        xAxisLabel="Delivery Period"
-        height={400}
-      />
+      <h3 className="section-title">{title}</h3>
+      <div className="h-[480px]">
+        <MultiLineChart
+          series={series}
+          yAxisLabel="MW"
+          xAxisLabel="Delivery Period"
+          height={480}
+        />
+      </div>
     </div>
   )
 }

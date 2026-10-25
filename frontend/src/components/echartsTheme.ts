@@ -2,21 +2,21 @@ import * as echarts from 'echarts'
 
 // Direction F - Publication Moment: ECharts theme registered once from locked palette
 // 2-color: moment (ink) + context (muted), serif display + mono data
-const PALETTE = ['#111827', '#6b7280', '#9ca3af', '#1f2937', '#4b5563']
+const PALETTE = ['#0f172a', '#64748b', '#94a3b8', '#334155', '#475569']
 
 const baseTheme = {
   color: PALETTE,
   textStyle: {
     fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
-    color: '#111827',
-    fontSize: 13,
+    color: '#0f172a',
+    fontSize: 12,
   },
   title: {
     textStyle: {
       fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
-      fontSize: 16,
+      fontSize: 14,
       fontWeight: 600,
-      color: '#111827',
+      color: '#0f172a',
     },
   },
   tooltip: {
@@ -28,7 +28,7 @@ const baseTheme = {
   axisLabel: {
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
     fontSize: 11,
-    color: '#6b7280',
+    color: '#64748b',
   },
   axisLine: {
     lineStyle: {
@@ -45,7 +45,7 @@ const baseTheme = {
     textStyle: {
       fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
       fontSize: 12,
-      color: '#6b7280',
+      color: '#64748b',
     },
   },
 }
@@ -54,27 +54,27 @@ const darkTheme = {
   ...baseTheme,
   textStyle: {
     ...baseTheme.textStyle,
-    color: '#ffffff',
+    color: '#f8fafc',
   },
   title: {
     ...baseTheme.title,
     textStyle: {
       ...baseTheme.title.textStyle,
-      color: '#ffffff',
+      color: '#f8fafc',
     },
   },
   axisLabel: {
     ...baseTheme.axisLabel,
-    color: '#9ca3af',
+    color: '#94a3b8',
   },
   axisLine: {
     lineStyle: {
-      color: '#334155',
+      color: '#1e293b',
     },
   },
   splitLine: {
     lineStyle: {
-      color: '#1e293b',
+      color: '#0f172a',
       type: 'dashed',
     },
   },
@@ -82,7 +82,7 @@ const darkTheme = {
     ...baseTheme.legend,
     textStyle: {
       ...baseTheme.legend.textStyle,
-      color: '#9ca3af',
+      color: '#94a3b8',
     },
   },
 }

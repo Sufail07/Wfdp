@@ -7,23 +7,26 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  --color-moment: #111827;
-  --color-context: #6b7280;
-  --color-context-light: #9ca3af;
+  --color-moment: #0f172a;
+  --color-context: #64748b;
+  --color-context-light: #94a3b8;
   --color-bg: #ffffff;
   --color-surface: #f8fafc;
   --color-border: #e2e8f0;
+  --color-border-hover: #cbd5e1;
 
   --radius: 8px;
+  --header-height: 4rem;
 }
 
 [data-theme="dark"], .dark {
-  --color-moment: #ffffff;
-  --color-context: #9ca3af;
-  --color-context-light: #6b7280;
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-border: #334155;
+  --color-moment: #f8fafc;
+  --color-context: #94a3b8;
+  --color-context-light: #64748b;
+  --color-bg: #020617;
+  --color-surface: #0f172a;
+  --color-border: #1e293b;
+  --color-border-hover: #334155;
 }
 
 html {
@@ -47,6 +50,8 @@ body {
 
 #root {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .font-serif { font-family: var(--font-serif); }
@@ -66,15 +71,18 @@ body {
 
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded font-medium text-moment transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply px-4 py-2 rounded font-medium text-moment transition-all focus:outline-none focus:ring-2 focus:ring-offset-2;
     border: 1px solid var(--color-border);
     background: var(--color-surface);
+    color: var(--color-moment);
   }
   .btn:hover {
-    background: #e2e8f0;
+    background: var(--color-border-hover);
+    border-color: var(--color-border-hover);
   }
   .dark .btn:hover {
-    background: #334155;
+    background: var(--color-border-hover);
+    border-color: var(--color-border-hover);
   }
   .btn-primary {
     @apply btn text-moment font-semibold;
@@ -85,11 +93,25 @@ body {
   .btn-primary:hover {
     opacity: 0.9;
   }
+  .btn-secondary {
+    @apply btn text-context font-medium;
+    border-color: var(--color-border);
+    background: transparent;
+    color: var(--color-context);
+  }
+  .btn-secondary:hover {
+    background: var(--color-surface);
+    color: var(--color-moment);
+  }
   .input {
-    @apply w-full px-3 py-2 rounded font-mono text-moment transition-colors focus:outline-none focus:ring-2;
+    @apply w-full px-3 py-2 rounded font-mono text-moment transition-all focus:outline-none focus:ring-2;
     border: 1px solid var(--color-border);
     background: var(--color-bg);
     color: var(--color-moment);
+  }
+  .input:focus {
+    border-color: var(--color-moment);
+    ring-color: var(--color-moment);
   }
   .input::placeholder {
     color: var(--color-context-light);
@@ -100,22 +122,40 @@ body {
     border-color: var(--color-border);
   }
   .label {
-    @apply block text-caption font-mono text-context mb-2;
+    @apply block text-xs font-mono font-semibold text-context mb-1.5 uppercase tracking-wider;
   }
   .card {
     @apply p-6 rounded-lg border border-color;
     background: var(--color-surface);
   }
+  .card:hover {
+    border-color: var(--color-border-hover);
+  }
   .kpi-card {
-    @apply card flex flex-col items-start;
+    @apply card flex flex-col items-start p-5;
   }
   .kpi-value {
-    @apply text-moment font-serif text-moment leading-none;
+    @apply text-moment font-serif text-2xl font-bold leading-none;
   }
   .kpi-label {
-    @apply text-caption text-context mt-1 font-mono;
+    @apply text-xs font-mono font-semibold text-context uppercase tracking-wider mt-0.5;
   }
   .kpi-unit {
-    @apply text-context-light text-caption font-mono ml-1;
+    @apply text-context-light text-xs font-mono ml-1;
+  }
+  .page-title {
+    @apply font-serif text-moment text-2xl font-bold tracking-tight mb-2;
+  }
+  .page-subtitle {
+    @apply font-mono text-context text-sm mt-0.5;
+  }
+  .section-title {
+    @apply font-serif font-semibold text-moment text-lg mb-4;
+  }
+  .meta-text {
+    @apply font-mono text-context text-sm;
+  }
+  .data-text {
+    @apply font-mono text-moment text-sm tabular-nums;
   }
 }

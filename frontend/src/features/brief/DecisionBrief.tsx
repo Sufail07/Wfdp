@@ -64,9 +64,29 @@ export function DecisionBrief() {
   const lastVintageMW = revisions?.vintages?.[revisions.vintages.length - 1]?.forecastMW
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-start lg:gap-6">
-        <div className="lg:w-1/3 space-y-4">
+    <div className="space-y-8">
+      {/* Hero section - the moment */}
+      <div className="card">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+          <div className="space-y-2">
+            <h1 className="page-title">Wind Forecast &mdash; {deliveryDate}</h1>
+            <p className="page-subtitle">
+              Cutoff {cutoffHour.toString().padStart(2, '0')}:00 London &middot;
+              Published {forecast?.forecast_published_at ? formatLondonTime(forecast.forecast_published_at, 'HH:mm') : '--'}
+            </p>
+          </div>
+          {forecast?.forecast_published_at && (
+            <div className="mt-4 lg:mt-0 flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400"></span>
+              <span className="font-mono text-context text-xs">Data current as of cutoff</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row lg:items-start lg:gap-8">
+        {/* Sidebar - controls */}
+        <div className="lg:w-1/4 space-y-6 flex-1">
           <DeliveryDayPicker
             value={deliveryDate}
             onChange={setDeliveryDate}
@@ -85,9 +105,11 @@ export function DecisionBrief() {
           />
         </div>
 
-        <div className="lg:w-2/3 space-y-6">
+        {/* Main content */}
+        <div className="lg:w-3/4 space-y-8 flex-1 min-w-0">
           {(forecastLoading || revisionsLoading || riskLoading) && (
-            <div className="h-[500px]">
+            <div className="h-[520px] flex flex-col gap-4">
+              <LoadingSkeleton className="h-4 w-1/3" />
               <LoadingSkeleton className="h-48 w-full" />
               <LoadingSkeleton className="h-32 w-3/4 mt-4" />
             </div>
@@ -97,45 +119,32 @@ export function DecisionBrief() {
 
           {!forecastLoading && forecast && !forecastError && (
             <>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h1 className="font-serif text-moment text-display tracking-tight">
-                    Wind Forecast &mdash; {deliveryDate}
-                  </h1>
-                  <p className="font-mono text-context mt-1 text-data">
-                    Cutoff {cutoffHour.toString().padStart(2, '0')}:00 London &middot; Published {forecast.forecast_published_at ? formatLondonTime(forecast.forecast_published_at, 'HH:mm') : '--'}
-                  </p>
-                </div>
-              </div>
-
               <KPIStrip
                 totalExpectedMWh={forecast.total_expected_mwh ?? 0}
                 peakMW={forecast.peak_mw ?? 0}
                 minMW={forecast.min_mw ?? 0}
                 meanMW={forecast.mean_mw ?? 0}
-                publishedAt={forecast.forecast_published_at
-                  ? formatLondonTime(forecast.forecast_published_at, 'HH:mm')
-                  : undefined}
-                freshness={forecast.cutoff_utc ? formatLondonTime(forecast.cutoff_utc, 'HH:mm') : undefined}
               />
 
-              <MainChart
-                decisionForecast={forecastSeries}
-                riskAdjusted={riskAdjustedSeries}
-                title={`Wind Forecast for ${deliveryDate}`}
-              />
-
-              {forecast.forecasts && forecast.forecasts.length > 0 && latestForecastMW !== undefined && lastVintageMW !== undefined && (
-                <AsOfCallout
-                  deliveryDate={deliveryDate}
-                  cutoffHour={cutoffHour}
-                  cutoffMinute={0}
-                  publishedAt={forecast.forecast_published_at || '--'}
-                  forecastMW={latestForecastMW}
-                  laterMW={lastVintageMW}
-                  moveMW={lastVintageMW - latestForecastMW}
+              <div className="space-y-6">
+                <MainChart
+                  decisionForecast={forecastSeries}
+                  riskAdjusted={riskAdjustedSeries}
+                  title={`Wind Forecast for ${deliveryDate}`}
                 />
-              )}
+
+                {forecast.forecasts && forecast.forecasts.length > 0 && latestForecastMW !== undefined && lastVintageMW !== undefined && (
+                  <AsOfCallout
+                    deliveryDate={deliveryDate}
+                    cutoffHour={cutoffHour}
+                    cutoffMinute={0}
+                    publishedAt={forecast.forecast_published_at || '--'}
+                    forecastMW={latestForecastMW}
+                    laterMW={lastVintageMW}
+                    moveMW={lastVintageMW - latestForecastMW}
+                  />
+                )}
+              </div>
             </>
           )}
         </div>
