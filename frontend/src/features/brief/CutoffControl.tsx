@@ -11,7 +11,7 @@ export function CutoffControl({ hour, minute, onChange }: CutoffControlProps) {
       <label className="label">Cutoff Time (London)</label>
       <div className="flex gap-4 items-center">
         <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600 dark:text-gray-400">Hour</label>
+          <label className="text-caption text-context">Hour</label>
           <input
             type="number"
             value={hour}
@@ -22,7 +22,7 @@ export function CutoffControl({ hour, minute, onChange }: CutoffControlProps) {
           />
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600 dark:text-gray-400">Minute</label>
+          <label className="text-caption text-context">Minute</label>
           <input
             type="number"
             value={minute}
@@ -32,7 +32,7 @@ export function CutoffControl({ hour, minute, onChange }: CutoffControlProps) {
             className="w-16 input"
           />
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-caption text-context-light">
           Default: 09:00 Europe/London
         </p>
       </div>

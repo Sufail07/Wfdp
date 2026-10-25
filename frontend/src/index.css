@@ -3,8 +3,32 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --color-moment: #111827;
+  --color-context: #6b7280;
+  --color-context-light: #9ca3af;
+  --color-bg: #ffffff;
+  --color-surface: #f8fafc;
+  --color-border: #e2e8f0;
+
+  --radius: 8px;
+}
+
+[data-theme="dark"], .dark {
+  --color-moment: #ffffff;
+  --color-context: #9ca3af;
+  --color-context-light: #6b7280;
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-border: #334155;
+}
+
+html {
+  font-family: var(--font-sans);
+  line-height: 1.6;
   font-weight: 400;
   color-scheme: light dark;
   font-synthesis: none;
@@ -17,38 +41,81 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-moment);
 }
 
 #root {
   min-height: 100vh;
 }
 
+.font-serif { font-family: var(--font-serif); }
+.font-mono { font-family: var(--font-mono); }
+.font-sans { font-family: var(--font-sans); }
+
+.text-moment { color: var(--color-moment); }
+.text-context { color: var(--color-context); }
+.text-context-light { color: var(--color-context-light); }
+
+.bg-moment { background-color: var(--color-moment); }
+.bg-context { background-color: var(--color-context); }
+.bg-bg { background-color: var(--color-bg); }
+.bg-surface { background-color: var(--color-surface); }
+
+.border-color { border-color: var(--color-border); }
+
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply px-4 py-2 rounded font-medium text-moment transition-colors focus:outline-none focus:ring-2 focus-ring-offset-2;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .btn:hover {
+    background: #e2e8f0;
+  }
+  .dark .btn:hover {
+    background: #334155;
   }
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    @apply btn text-moment font-semibold;
+    border-color: var(--color-moment);
+    background: var(--color-moment);
+    color: #ffffff;
   }
-  .btn-secondary {
-    @apply btn bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700;
+  .btn-primary:hover {
+    opacity: 0.9;
   }
   .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white;
+    @apply w-full px-3 py-2 rounded font-mono text-moment transition-colors focus:outline-none focus:ring-2;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-moment);
+  }
+  .input::placeholder {
+    color: var(--color-context-light);
+  }
+  .dark .input {
+    background: var(--color-surface);
+    color: var(--color-moment);
+    border-color: var(--color-border);
   }
   .label {
-    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+    @apply block text-caption font-mono text-context mb-2;
   }
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6;
+    @apply p-6 rounded-lg border border-color;
+    background: var(--color-surface);
   }
   .kpi-card {
-    @apply card flex flex-col;
+    @apply card flex flex-col items-start;
   }
   .kpi-value {
-    @apply text-3xl font-bold text-gray-900 dark:text-white;
+    @apply text-moment font-serif text-moment leading-none;
   }
   .kpi-label {
-    @apply text-sm text-gray-500 dark:text-gray-400 mt-1;
+    @apply text-caption text-context mt-1 font-mono;
+  }
+  .kpi-unit {
+    @apply text-context-light text-caption font-mono ml-1;
   }
 }

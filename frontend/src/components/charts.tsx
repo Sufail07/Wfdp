@@ -1,5 +1,7 @@
 import { useCallback } from 'react'
 import ReactECharts from 'echarts-for-react'
+import { useTheme } from '../context/ThemeContext'
+import { getEChartsTheme } from './echartsTheme'
 
 interface LineChartProps {
   data: Array<{ x: string | number; y: number }>
@@ -16,12 +18,15 @@ export function LineChart({
   title,
   yAxisLabel = 'MW',
   xAxisLabel = 'Time',
-  color = '#0ea5e9',
+  color,
   height = 400,
   className,
 }: LineChartProps) {
+  const { theme } = useTheme()
+  const echartsTheme = getEChartsTheme(theme === 'dark')
+
   const option = useCallback(() => ({
-    title: title ? { text: title, left: 'center', textStyle: { fontSize: 16 } } : undefined,
+    title: title ? { text: title, left: 'center' } : undefined,
     tooltip: { trigger: 'axis' },
     xAxis: {
       type: 'category',
@@ -50,7 +55,7 @@ export function LineChart({
 
   return (
     <div className={className} style={{ height }}>
-      <ReactECharts option={option()} style={{ width: '100%', height: '100%' }} />
+      <ReactECharts option={option()} theme={echartsTheme} style={{ width: '100%', height: '100%' }} />
     </div>
   )
 }
@@ -76,8 +81,11 @@ export function MultiLineChart({
   height = 400,
   className,
 }: MultiLineChartProps) {
+  const { theme } = useTheme()
+  const echartsTheme = getEChartsTheme(theme === 'dark')
+
   const option = useCallback(() => ({
-    title: title ? { text: title, left: 'center', textStyle: { fontSize: 16 } } : undefined,
+    title: title ? { text: title, left: 'center' } : undefined,
     tooltip: { trigger: 'axis' },
     legend: series.length > 1 ? { data: series.map((s) => s.name) } : undefined,
     xAxis: {
@@ -105,7 +113,7 @@ export function MultiLineChart({
 
   return (
     <div className={className} style={{ height }}>
-      <ReactECharts option={option()} style={{ width: '100%', height: '100%' }} />
+      <ReactECharts option={option()} theme={echartsTheme} style={{ width: '100%', height: '100%' }} />
     </div>
   )
 }
@@ -125,12 +133,15 @@ export function BarChart({
   title,
   yAxisLabel,
   xAxisLabel = 'Category',
-  color = '#0ea5e9',
+  color = '#111827',
   height = 400,
   className,
 }: BarChartProps) {
+  const { theme } = useTheme()
+  const echartsTheme = getEChartsTheme(theme === 'dark')
+
   const option = useCallback(() => ({
-    title: title ? { text: title, left: 'center', textStyle: { fontSize: 16 } } : undefined,
+    title: title ? { text: title, left: 'center' } : undefined,
     tooltip: { trigger: 'axis' },
     xAxis: {
       type: 'category',
@@ -155,7 +166,7 @@ export function BarChart({
 
   return (
     <div className={className} style={{ height }}>
-      <ReactECharts option={option()} style={{ width: '100%', height: '100%' }} />
+      <ReactECharts option={option()} theme={echartsTheme} style={{ width: '100%', height: '100%' }} />
     </div>
   )
 }
@@ -173,8 +184,11 @@ export function HeatmapChart({
   height = 300,
   className,
 }: HeatmapProps) {
+  const { theme } = useTheme()
+  const echartsTheme = getEChartsTheme(theme === 'dark')
+
   const option = useCallback(() => ({
-    title: title ? { text: title, left: 'center', textStyle: { fontSize: 16 } } : undefined,
+    title: title ? { text: title, left: 'center' } : undefined,
     tooltip: { trigger: 'item' },
     xAxis: {
       type: 'category',
@@ -208,7 +222,7 @@ export function HeatmapChart({
 
   return (
     <div className={className} style={{ height }}>
-      <ReactECharts option={option()} style={{ width: '100%', height: '100%' }} />
+      <ReactECharts option={option()} theme={echartsTheme} style={{ width: '100%', height: '100%' }} />
     </div>
   )
 }

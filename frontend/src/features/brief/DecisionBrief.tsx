@@ -97,6 +97,17 @@ export function DecisionBrief() {
 
           {!forecastLoading && forecast && !forecastError && (
             <>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h1 className="font-serif text-moment text-display tracking-tight">
+                    Wind Forecast &mdash; {deliveryDate}
+                  </h1>
+                  <p className="font-mono text-context mt-1 text-data">
+                    Cutoff {cutoffHour.toString().padStart(2, '0')}:00 London &middot; Published {forecast.forecast_published_at ? formatLondonTime(forecast.forecast_published_at, 'HH:mm') : '--'}
+                  </p>
+                </div>
+              </div>
+
               <KPIStrip
                 totalExpectedMWh={forecast.total_expected_mwh ?? 0}
                 peakMW={forecast.peak_mw ?? 0}

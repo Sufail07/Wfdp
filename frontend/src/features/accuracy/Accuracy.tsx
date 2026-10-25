@@ -72,7 +72,7 @@ export function Accuracy() {
                 className="input"
               />
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-caption text-context mt-1">
               Range filter updates all charts below
             </p>
           </div>
@@ -102,7 +102,7 @@ export function Accuracy() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="card">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Daily Error Series</h3>
+                  <h3 className="font-serif font-semibold text-moment mb-4">Daily Error Series</h3>
                   <LineChart
                     data={daily?.results?.map((r: any) => ({
                       x: String(r.delivery_date || ''),
@@ -115,15 +115,15 @@ export function Accuracy() {
                 </div>
 
                 <div className="card">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Error Distribution</h3>
+                  <h3 className="font-serif font-semibold text-moment mb-4">Error Distribution</h3>
                   <div className="space-y-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="font-mono text-context text-sm">
                       P90: {errorDist?.distribution?.quantiles?.p90 !== undefined ? errorDist.distribution.quantiles.p90.toFixed(1) : '--'} MW
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="font-mono text-context text-sm">
                       P95: {errorDist?.distribution?.quantiles?.p95 !== undefined ? errorDist.distribution.quantiles.p95.toFixed(1) : '--'} MW
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="font-mono text-context text-sm">
                       P99: {errorDist?.distribution?.quantiles?.p99 !== undefined ? errorDist.distribution.quantiles.p99.toFixed(1) : '--'} MW
                     </p>
                   </div>
@@ -132,7 +132,7 @@ export function Accuracy() {
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="card lg:col-span-2">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Accuracy by Horizon</h3>
+                  <h3 className="font-serif font-semibold text-moment mb-4">Accuracy by Horizon</h3>
                   <BarChart
                     data={byHorizon?.results?.map((r: any) => ({
                       x: r.horizon_bucket || 'Unknown',
@@ -145,7 +145,7 @@ export function Accuracy() {
                 </div>
 
                 <div className="card">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Accuracy by Hour</h3>
+                  <h3 className="font-serif font-semibold text-moment mb-4">Accuracy by Hour</h3>
                   <BarChart
                     data={byHour?.results?.map((r: any) => ({
                       x: r.hour_of_day || 0,
@@ -158,7 +158,7 @@ export function Accuracy() {
                 </div>
 
                 <div className="card">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Accuracy by Wind Level</h3>
+                  <h3 className="font-serif font-semibold text-moment mb-4">Accuracy by Wind Level</h3>
                   <BarChart
                     data={byWindLevel?.results?.map((r: any) => ({
                       x: r.wind_level || 'Unknown',
@@ -172,7 +172,7 @@ export function Accuracy() {
               </div>
 
               <div className="card">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Over-Forecast Share</h3>
+                <h3 className="font-serif font-semibold text-moment mb-4">Over-Forecast Share</h3>
                 <KPICard
                   value={metrics.over_forecast_share !== undefined ? formatPercent(metrics.over_forecast_share) : '--'}
                   label="Share of forecasts that over-estimated wind"
