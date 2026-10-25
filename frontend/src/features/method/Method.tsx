@@ -66,11 +66,6 @@ export function Method() {
                   <span>Wind generation forecasts with multiple vintages from Elexon BM Reports</span>
                 </li>
               </ul>
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
-                <p className="text-sm font-mono text-gray-800">
-                  <strong className="text-moment">Data Disclosure:</strong> This dataset contains synthetic mock data for demonstration purposes only. Real Elexon data not available.
-                </p>
-              </div>
             </div>
 
             <div className="bg-surface border border-color rounded-lg p-5 mt-4">
