@@ -18,8 +18,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-12">
             <div className="flex items-center gap-6">
-              <Link to="/" className="font-serif text-ink text-[20px] font-normal tracking-tight">
-                Wind Forecast
+              <Link to="/" className="font-serif text-ink text-[20px] font-normal tracking-tight hover:opacity-80 transition-opacity">
+                Wind Forecast Portal
               </Link>
               <nav className="hidden md:flex items-center gap-5 text-sm">
                 {navItems.map((item) => (

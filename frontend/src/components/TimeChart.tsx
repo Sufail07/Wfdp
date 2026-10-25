@@ -31,6 +31,9 @@ export function TimeChart({
   const option = useCallback(() => {
     const base = series[0]?.data || []
     const xData = base.map((d) => d.x)
+    const isDark = theme === 'dark'
+    const accentColor = isDark ? '#5FB3CE' : '#1F6F8B'
+    const mutedColor = isDark ? '#9A9EA5' : '#6B6F76'
 
     return {
       grid: { left: '6%', right: '6%', top: 20, bottom: 40, containLabel: true },
@@ -72,11 +75,11 @@ export function TimeChart({
         symbol: 'none',
         lineStyle: { width: idx === 0 ? 1.5 : 1, opacity: s.opacity ?? 1, ...s.lineStyle },
         itemStyle: { borderWidth: 0 },
-        color: s.color || (idx === 0 ? 'var(--accent)' : 'var(--ink-muted)'),
+        color: idx === 0 ? accentColor : mutedColor,
         smooth: true,
       })),
     }
-  }, [series])
+  }, [series, theme])
 
   return (
     <div className={`time-chart relative ${className || ''}`} style={{ height }}>

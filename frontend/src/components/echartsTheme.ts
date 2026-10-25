@@ -22,9 +22,12 @@ const lightTheme = {
   tooltip: {
     trigger: 'axis',
     axisPointer: { type: 'line' },
+    backgroundColor: '#F6F4EF',
+    borderColor: '#D9D5CB',
     textStyle: {
       fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
       fontSize: 11,
+      color: '#15171A',
     },
   },
   grid: {
@@ -79,6 +82,7 @@ const lightTheme = {
 const darkTheme = {
   ...lightTheme,
   color: ['#5FB3CE', '#E5775F', '#6FA6D6', '#9A9EA5', '#64748b'],
+  backgroundColor: 'transparent',
   textStyle: {
     ...lightTheme.textStyle,
     color: '#9A9EA5',
@@ -87,6 +91,15 @@ const darkTheme = {
     ...lightTheme.title,
     textStyle: {
       ...lightTheme.title.textStyle,
+      color: '#ECE9E2',
+    },
+  },
+  tooltip: {
+    ...lightTheme.tooltip,
+    backgroundColor: '#121315',
+    borderColor: '#2A2C30',
+    textStyle: {
+      ...lightTheme.tooltip.textStyle,
       color: '#ECE9E2',
     },
   },

@@ -26,8 +26,8 @@ export function LineChart({
   const echartsTheme = getEChartsTheme(theme === 'dark')
 
   const option = useCallback(() => ({
-    title: title ? { text: title, left: 'left', top: 10, textStyle: { fontSize: 14, fontWeight: 600, fontFamily: 'ui-serif, Georgia, serif', color: '#0f172a' } } : undefined,
-    tooltip: { trigger: 'axis', axisPointer: { type: 'line' } },
+    title: title ? { text: title, left: 'left', top: 10, textStyle: { fontSize: 14, fontWeight: 400, fontFamily: 'Georgia, serif', color: 'var(--ink)' } } : undefined,
+    tooltip: { trigger: 'axis', axisPointer: { type: 'line' }, backgroundColor: 'var(--paper)', borderColor: 'var(--rule)', textStyle: { color: 'var(--ink)', fontSize: 11, fontFamily: 'ui-monospace, monospace' } },
     xAxis: {
       type: 'category',
       data: data.map((d) => d.x),
@@ -179,9 +179,9 @@ export function BarChart({
       {
         type: 'bar',
         data: data.map((d) => d.y),
-        color,
-        barWidth: '60%',
-        itemStyle: { borderRadius: [4, 4, 0, 0] },
+        color: theme === 'dark' ? '#5FB3CE' : '#1F6F8B',
+        barWidth: '40%',
+        itemStyle: { borderRadius: [2, 2, 0, 0] },
       },
     ],
     grid: { left: '8%', right: '8%', bottom: '14%', top: 40 },
