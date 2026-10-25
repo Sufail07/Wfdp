@@ -57,21 +57,20 @@ export function Method() {
             <div className="bg-surface border border-color rounded-lg p-5">
               <h3 className="font-serif font-semibold text-moment text-sm mb-3 uppercase tracking-wider">Data Sources</h3>
               <ul className="list-disc pl-6 font-mono text-context text-sm space-y-2">
-              <li className="flex gap-2">
-                <span className="font-semibold text-moment">FUELHH</span>
-                <span>Half-hourly metered wind generation (actuals) from Elexon BM Reports</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="font-semibold text-moment">WINDFOR</span>
-                <span>Wind generation forecasts with multiple vintages from Elexon BM Reports</span>
-              </li>
-            </ul>
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
-              <p className="text-sm font-mono text-gray-800">
-                <strong className="text-moment">Data Disclosure:</strong> This dataset contains synthetic mock data for demonstration purposes only. Real Elexon data not available.
-              </p>
-            </div>
+                <li className="flex gap-2">
+                  <span className="font-semibold text-moment">FUELHH</span>
+                  <span>Half-hourly metered wind generation (actuals) from Elexon BM Reports</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-semibold text-moment">WINDFOR</span>
+                  <span>Wind generation forecasts with multiple vintages from Elexon BM Reports</span>
+                </li>
               </ul>
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
+                <p className="text-sm font-mono text-gray-800">
+                  <strong className="text-moment">Data Disclosure:</strong> This dataset contains synthetic mock data for demonstration purposes only. Real Elexon data not available.
+                </p>
+              </div>
             </div>
 
             <div className="bg-surface border border-color rounded-lg p-5 mt-4">

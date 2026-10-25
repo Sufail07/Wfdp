@@ -129,7 +129,7 @@ export function BarChart({
   const inkColor = useResolvedColor('--ink')
   const inkMutedColor = useResolvedColor('--ink-muted')
   const paperColor = useResolvedColor('--paper')
-  const overColor = series2Color ? useResolvedColor(series2Color) : useResolvedColor('--over')
+  const overColor = useResolvedColor(series2Color ?? '--over')
 
   const option = useCallback(() => {
     const base = baseOption({
@@ -232,15 +232,15 @@ export function LineChart({
   const inkMutedColor = useResolvedColor('--ink-muted')
   const paperColor = useResolvedColor('--paper')
 
-  const option = useCallback(() => {
+const option = useCallback(() => {
     return {
       ...baseOption({ bottom: 45, xLabelRotate: -45, ruleColor, inkColor, inkMutedColor, paperColor }),
       xAxis: {
         ...baseOption({}).xAxis,
         type: 'value',
-        min: bins[0],
-        max: bins[bins.length - 1],
-        name: 'Signed error (MW)',
+        min: data.length > 0 ? Math.min(...data.map(d => typeof d.x === 'number' ? d.x : 0)) : undefined,
+        max: data.length > 0 ? Math.max(...data.map(d => typeof d.x === 'number' ? d.x : 0)) : undefined,
+        name: 'Time',
         nameLocation: 'center',
         nameGap: 35,
         axisLabel: {

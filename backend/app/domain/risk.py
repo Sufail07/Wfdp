@@ -49,6 +49,66 @@ def _bin_forecast_level(forecast_mw: float) -> str:
         return "medium"
     return "high"
 
+
+def compute_risk_band(
+    forecasts_df: pd.DataFrame,
+    actuals_df: pd.DataFrame,
+    delivery_date: pd.Timestamp,
+    quantile: float = 0.9,
+    cutoff_hour: int = 9,
+    cutoff_minute: int = 0,
+    tz: str = "Europe/London",
+    min_sample_days: int = 3,
+    min_sample_errors: int = 24,
+    availability_lag_minutes: int = 0,
+) -> dict[str, Any]:
+    """
+    Compute risk-adjusted forecast band using expanding window to prevent leakage.
+
+    Estimates quantiles ONLY from delivery days < D (expanding window).
+    Falls back to pooled distribution if < min_sample_days sample.
+    Suppresses the band (returns empty risk_adjusted) when sample is too small.
+
+    Level-dependent margin: quantile estimated per forecast-level bin
+    (low / medium / high), falling back to pooled when a bin has too few samples.
+
+    Args:
+        forecasts_df: All forecasts (WINDFOR)
+        actuals_df: All actuals (FUELHH)
+        delivery_date: Target delivery date
+        quantile: Quantile for risk band (default 0.9)
+        cutoff_hour: Cutoff hour in London time
+        cutoff_minute: Cutoff minute in London time
+        tz: Timezone
+        min_sample_days: Minimum days needed for in-sample estimation
+        min_sample_errors: Minimum errors needed for in-sample estimation
+        availability_lag_minutes: Lag between publish and availability
+
+    Returns:
+        Dictionary with risk-adjusted forecasts, quantiles, and in_sample flag
+    """
+    target_date = delivery_date.date()
+
+    # Get decision forecast for target date
+    decision_fcst = select_decision_forecast(
+        forecasts_df, delivery_date, cutoff_hour, cutoff_minute, tz,
+        availability_lag_minutes=availability_lag_minutes,
+    )
+
+    if decision_fcst.empty:
+        return {
+            "delivery_date": delivery_date.isoformat(),
+            "quantile": quantile,
+            "in_sample": False,
+            "suppressed": True,
+            "suppression_reason": "no_decision_forecast",
+            "risk_adjusted": [],
+            "level_quantiles": {},
+            "over_forecast_quantile": None,
+            "sample_days": 0,
+            "sample_errors": 0,
+        }
+
     # Get all historical delivery dates strictly before target
     all_delivery_dates = pd.to_datetime(actuals_df["settlementDate"]).dt.date.unique()
     all_delivery_dates = pd.Series(sorted(all_delivery_dates))
@@ -123,4 +183,5 @@ def _bin_forecast_level(forecast_mw: float) -> str:
         "sample_errors": len(all_errors),
         "level_quantiles": level_quantiles,
         "risk_adjusted": risk_adjusted,
+        "over_forecast_quantile": level_quantiles.get("pooled"),
     }
