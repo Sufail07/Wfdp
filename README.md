@@ -87,9 +87,8 @@ npm run dev
 
 ## Deployed Application
 
-**Vercel (Primary):** https://wind-forecast-portal.vercel.app
+**Vercel (Primary):** (https://frontend-nine-amber-86.vercel.app/)
 
-**Heroku (Fallback):** https://wind-forecast-portal.herokuapp.com
 
 ## API Endpoints
 
