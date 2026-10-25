@@ -147,7 +147,6 @@ export function BarChart({
   title,
   yAxisLabel,
   xAxisLabel = 'Category',
-  color = '#0f172a',
   height = 320,
   className,
 }: BarChartProps) {
@@ -155,37 +154,38 @@ export function BarChart({
   const echartsTheme = getEChartsTheme(theme === 'dark')
 
   const option = useCallback(() => ({
-    title: title ? { text: title, left: 'left', top: 10, textStyle: { fontSize: 14, fontWeight: 600, fontFamily: 'ui-serif, Georgia, serif', color: '#0f172a' } } : undefined,
-    tooltip: { trigger: 'axis' },
+    title: title ? { text: title, left: 'left', top: 10, textStyle: { fontSize: 14, fontWeight: 400, fontFamily: 'Georgia, serif', color: 'var(--ink)' } } : undefined,
+    tooltip: { trigger: 'axis', axisPointer: { type: 'line' }, backgroundColor: 'var(--paper)', borderColor: 'var(--rule)', textStyle: { color: 'var(--ink)', fontSize: 11, fontFamily: 'ui-monospace, monospace' } },
     xAxis: {
       type: 'category',
       data: data.map((d) => d.x),
       name: xAxisLabel,
       nameLocation: 'center',
       nameGap: 30,
-      axisLabel: { rotate: 0, fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: '#64748b' },
-      axisLine: { lineStyle: { color: '#e2e8f0' } },
+      axisLabel: { rotate: -45, fontSize: 9, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: 'var(--ink-muted)', interval: 0, margin: 15 },
+      axisLine: { lineStyle: { color: 'var(--rule)' } },
+      axisTick: { show: true, length: 3 },
     },
     yAxis: {
       type: 'value',
       name: yAxisLabel,
       nameLocation: 'center',
       nameGap: 50,
-      axisLabel: { fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: '#64748b' },
-      axisLine: { lineStyle: { color: '#e2e8f0' } },
-      splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } },
+      axisLabel: { fontSize: 9, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: 'var(--ink-muted)' },
+      axisLine: { lineStyle: { color: 'var(--rule)' } },
+      splitLine: { lineStyle: { color: 'var(--rule)', type: 'dashed', width: 0.5 } },
     },
     series: [
       {
         type: 'bar',
         data: data.map((d) => d.y),
-        color: theme === 'dark' ? '#5FB3CE' : '#1F6F8B',
+        color: 'var(--accent)',
         barWidth: '40%',
         itemStyle: { borderRadius: [2, 2, 0, 0] },
       },
     ],
-    grid: { left: '8%', right: '8%', bottom: '14%', top: 40 },
-  }), [data, title, yAxisLabel, xAxisLabel, color])
+    grid: { left: '10%', right: '8%', bottom: '18%', top: 40 },
+  }), [data, title, yAxisLabel, xAxisLabel])
 
   return (
     <div className={className} style={{ height }}>

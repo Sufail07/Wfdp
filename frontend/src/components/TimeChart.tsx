@@ -39,7 +39,7 @@ export function TimeChart({
     const ruleColor = isDark ? '#2A2C30' : '#D9D5CB'
 
     return {
-      grid: { left: '8%', right: '6%', top: 20, bottom: 60, containLabel: true },
+      grid: { left: '10%', right: '8%', top: 25, bottom: 65, containLabel: true },
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'line' },
@@ -56,9 +56,9 @@ export function TimeChart({
           fontFamily: 'ui-monospace, monospace',
           fontSize: 9,
           color: axisMuted,
-          interval: 'auto',
-          rotate: -30,
-          margin: 12,
+          interval: 0,
+          rotate: -45,
+          margin: 15,
         },
         splitLine: { show: false },
       },
