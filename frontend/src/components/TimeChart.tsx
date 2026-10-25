@@ -34,26 +34,31 @@ export function TimeChart({
     const isDark = theme === 'dark'
     const accentColor = isDark ? '#5FB3CE' : '#1F6F8B'
     const mutedColor = isDark ? '#9A9EA5' : '#6B6F76'
+    const axisColor = isDark ? '#ECE9E2' : '#15171A'
+    const axisMuted = isDark ? '#9A9EA5' : '#6B6F76'
+    const ruleColor = isDark ? '#2A2C30' : '#D9D5CB'
 
     return {
-      grid: { left: '6%', right: '6%', top: 20, bottom: 40, containLabel: true },
+      grid: { left: '8%', right: '6%', top: 20, bottom: 60, containLabel: true },
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'line' },
-        backgroundColor: 'var(--paper)',
-        borderColor: 'var(--rule)',
-        textStyle: { color: 'var(--ink)', fontSize: 11, fontFamily: 'ui-monospace, monospace' },
+        backgroundColor: isDark ? '#121315' : '#F6F4EF',
+        borderColor: ruleColor,
+        textStyle: { color: axisColor, fontSize: 11, fontFamily: 'ui-monospace, monospace' },
       },
       xAxis: {
         type: 'category',
         data: xData,
-        axisLine: { lineStyle: { color: 'var(--rule)' } },
+        axisLine: { lineStyle: { color: ruleColor } },
         axisTick: { show: true, length: 3 },
         axisLabel: {
           fontFamily: 'ui-monospace, monospace',
-          fontSize: 10,
-          color: 'var(--ink-muted)',
-          interval: 5,
+          fontSize: 9,
+          color: axisMuted,
+          interval: 'auto',
+          rotate: -30,
+          margin: 12,
         },
         splitLine: { show: false },
       },
@@ -63,10 +68,10 @@ export function TimeChart({
         axisTick: { show: false },
         axisLabel: {
           fontFamily: 'ui-monospace, monospace',
-          fontSize: 10,
-          color: 'var(--ink-muted)',
+          fontSize: 9,
+          color: axisMuted,
         },
-        splitLine: { show: true, lineStyle: { color: 'var(--rule)', type: 'dashed', width: 0.5 } },
+        splitLine: { show: true, lineStyle: { color: ruleColor, type: 'dashed', width: 0.5 } },
       },
       series: series.map((s, idx) => ({
         name: s.name,
