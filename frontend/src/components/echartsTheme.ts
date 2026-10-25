@@ -109,9 +109,17 @@ const darkTheme = {
   xAxis: {
     ...lightTheme.xAxis,
     axisLine: { lineStyle: { color: '#2A2C30' } },
+    axisLabel: {
+      ...lightTheme.xAxis.axisLabel,
+      color: '#9A9EA5',
+    },
   },
   yAxis: {
     ...lightTheme.yAxis,
+    axisLabel: {
+      ...lightTheme.yAxis.axisLabel,
+      color: '#9A9EA5',
+    },
     splitLine: {
       show: true,
       lineStyle: { color: '#2A2C30', type: 'dashed', width: 0.5 },

@@ -51,14 +51,14 @@ def _validate_range(from_date: str, to_date: str) -> tuple[pd.Timestamp, pd.Time
     return from_dt, to_dt
 
 
-def _validate_bins(bins: int) -> int:
-    """Validate histogram bins cap."""
-    if bins > MAX_BINS:
+def _validate_bins(bin_width: int) -> int:
+    """Validate histogram bin width cap."""
+    if bin_width > MAX_BINS:
         raise HTTPException(
             status_code=422,
-            detail=f"bins exceeds {MAX_BINS} (requested {bins})",
+            detail=f"bin_width exceeds {MAX_BINS} (requested {bin_width})",
         )
-    return bins
+    return bin_width
 
 
 def _load_aligned_pairs(from_date: str, to_date: str, cutoff_hour: int, cutoff_minute: int) -> pd.DataFrame:
@@ -250,11 +250,11 @@ async def get_accuracy_error_distribution(
     to_date: str,
     cutoff_hour: int = None,
     cutoff_minute: int = None,
-    bins: int = Query(default=50, ge=10, le=200),
+    bin_width: int = Query(default=250, ge=50, le=1000),
 ):
     """Get error distribution histogram and quantiles."""
     _validate_range(from_date, to_date)
-    _validate_bins(bins)
+    _validate_bins(bin_width)
 
     ch = cutoff_hour if cutoff_hour is not None else settings.cutoff_hour
     cm = cutoff_minute if cutoff_minute is not None else settings.cutoff_minute
@@ -263,13 +263,13 @@ async def get_accuracy_error_distribution(
     if aligned.empty:
         raise HTTPException(status_code=404, detail="No data for date range")
 
-    dist = compute_error_distribution(aligned, bins=bins)
+    dist = compute_error_distribution(aligned, bin_width=bin_width)
 
     return AccuracyErrorDistributionResponse(
         from_date=pd.Timestamp(from_date).date(),
         to_date=pd.Timestamp(to_date).date(),
         cutoff_hour=ch,
         cutoff_minute=cm,
-        bins=bins,
+        bins=bin_width,
         distribution=dist,
     )

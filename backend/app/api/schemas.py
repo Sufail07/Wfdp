@@ -127,7 +127,7 @@ class AccuracyErrorDistributionResponse(BaseModel):
     to_date: date
     cutoff_hour: int | None = None
     cutoff_minute: int | None = None
-    bins: int | None = None
+    bin_width: int | None = None
     distribution: dict[str, Any]
 
 

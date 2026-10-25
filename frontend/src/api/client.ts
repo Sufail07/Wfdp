@@ -100,7 +100,7 @@ interface AccuracyErrorDistributionResponse {
   to_date: string
   cutoff_hour: number | null
   cutoff_minute: number | null
-  bins: number | null
+  bin_width: number | null
   distribution: Record<string, any>
 }
 
@@ -316,7 +316,7 @@ export function useAccuracyErrorDistribution(
   to_date: string,
   cutoff_hour?: number,
   cutoff_minute?: number,
-  bins?: number,
+  bin_width?: number,
   options?: UseQueryOptions<AccuracyErrorDistributionResponse>,
 ) {
   const queryString = new URLSearchParams()
@@ -324,7 +324,7 @@ export function useAccuracyErrorDistribution(
   queryString.set('to_date', to_date)
   if (cutoff_hour !== undefined) queryString.set('cutoff_hour', String(cutoff_hour))
   if (cutoff_minute !== undefined) queryString.set('cutoff_minute', String(cutoff_minute))
-  if (bins !== undefined) queryString.set('bins', String(bins))
+  if (bin_width !== undefined) queryString.set('bin_width', String(bin_width))
 
   return useQuery<AccuracyErrorDistributionResponse>({
     queryKey: [
@@ -333,7 +333,7 @@ export function useAccuracyErrorDistribution(
       to_date,
       cutoff_hour,
       cutoff_minute,
-      bins,
+      bin_width,
     ],
     queryFn: () =>
       apiFetch<AccuracyErrorDistributionResponse>(

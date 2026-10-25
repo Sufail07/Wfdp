@@ -141,10 +141,13 @@ def compute_daily(aligned_pairs: pd.DataFrame, tz: str = "Europe/London") -> pd.
 
 def compute_error_distribution(
     aligned_pairs: pd.DataFrame,
-    bins: int = 50,
+    bin_width: int = 250,
 ) -> Dict[str, Any]:
     """
-    Compute error distribution histogram and quantiles.
+    Compute error distribution histogram and quantiles using fixed-width bins.
+    
+    Bin edges are at multiples of bin_width. If fewer than 20 bins have data
+    with the default width, falls back to 500 MW width.
     
     Returns:
         Dictionary with histogram bins, counts, and quantiles
@@ -154,13 +157,25 @@ def compute_error_distribution(
         return {
             "histogram": {"bins": [], "counts": []},
             "quantiles": {},
+            "bin_width": bin_width,
         }
-    
+
     errors = valid["errorMW"].values
-    
-    # Histogram
-    hist, bin_edges = np.histogram(errors, bins=bins)
-    
+
+    def _histogram_with_width(bw: int) -> tuple:
+        start = np.floor(errors.min() / bw) * bw
+        end = np.ceil(errors.max() / bw) * bw
+        edges = np.arange(start, end + bw, bw)
+        hist, _ = np.histogram(errors, bins=edges)
+        return edges, hist, int((hist > 0).sum())
+
+    bin_edges, hist, non_empty = _histogram_with_width(bin_width)
+
+    # Fall back to 500 MW if too few non-empty bins
+    if non_empty < 20 and bin_width == 250:
+        bin_edges, hist, non_empty = _histogram_with_width(500)
+        bin_width = 500
+
     # Quantiles
     quantiles = {
         "p1": float(np.percentile(errors, 1)),
@@ -173,11 +188,12 @@ def compute_error_distribution(
         "p95": float(np.percentile(errors, 95)),
         "p99": float(np.percentile(errors, 99)),
     }
-    
+
     return {
         "histogram": {
             "bins": bin_edges.tolist(),
             "counts": hist.tolist(),
         },
         "quantiles": quantiles,
+        "bin_width": bin_width,
     }

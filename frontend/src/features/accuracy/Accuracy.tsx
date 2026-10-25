@@ -71,13 +71,20 @@ export function Accuracy() {
   const {
     data: errorDist,
     isLoading: distLoading,
-  } = useAccuracyErrorDistribution(fromDate, toDate)
-
-  const loading = metaLoading || summaryLoading || horizonLoading || hourLoading || windLoading || dailyLoading || distLoading
+  } = useAccuracyErrorDistribution(fromDate, toDate, undefined, undefined, 250)
 
   const metrics = summary?.metrics || {}
   const nDays = countDaysInRange(fromDate, toDate)
   const rangeSmallSample = nDays < 14
+
+  const loading =
+    metaLoading ||
+    summaryLoading ||
+    horizonLoading ||
+    hourLoading ||
+    windLoading ||
+    dailyLoading ||
+    distLoading
 
   // Build horizon data with ALL 6 buckets (empty ones shown as "no data")
   const horizonData = useMemo(() => {
@@ -148,6 +155,7 @@ export function Accuracy() {
   // Error distribution histogram data
   const histBins = errorDist?.distribution?.histogram?.bins || []
   const histCounts = errorDist?.distribution?.histogram?.counts || []
+  const histBinWidth = errorDist?.distribution?.bin_width ?? 250
   const quantiles = errorDist?.distribution?.quantiles || {}
   const p90All = quantiles?.p90
   const p95All = quantiles?.p95
@@ -321,7 +329,7 @@ export function Accuracy() {
                 <HistogramChart
                   bins={histBins}
                   counts={histCounts}
-                  zeroLine={true}
+                  bin_width={histBinWidth}
                   markers={[
                     { value: p90All ?? 0, label: `P90 all: ${Math.round(p90All ?? 0)} MW`, color: 'var(--over)' },
                     { value: p95All ?? 0, label: `P95 all: ${Math.round(p95All ?? 0)} MW`, color: 'var(--over)' },
@@ -421,7 +429,7 @@ export function Accuracy() {
                   />
                 </div>
                 <p className="text-xs font-mono text-ink-muted mt-2">
-                  Positive error = forecast above actual wind = buyer faces shortfall. P95 of all errors (histogram):{p95All !== undefined ? ` ${Math.round(p95All)} MW` : '—'} · P95 of over-forecasts only:{metrics.tail_risk_p95_over_mw !== undefined ? ` ${Math.round(metrics.tail_risk_p95_over_mw)} MW` : '—'}.
+                  Positive error = forecast above actual wind = buyer faces shortfall. P95 of all errors (histogram):{p95All !== undefined ? ` ${Math.round(p95All)} MW` : '—'} · P95 of over-forecasts only:{metrics.tail_risk_p95_over_mw !== undefined ? ` ${Math.round(metrics.tail_risk_p95_over_mw)} MW` : '—'} (different metric).
                 </p>
               </div>
             </div>

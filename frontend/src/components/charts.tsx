@@ -251,9 +251,9 @@ export function LineChart({
 }
 
 interface HistogramChartProps {
-  bins: number[]
-  counts: number[]
-  zeroLine?: boolean
+  bins: number[]      // bin edges (n+1 values)
+  counts: number[]    // counts per bin (n values)
+  bin_width?: number  // bin width in MW
   markers?: Array<{ value: number; label: string; color?: string }>
   height?: number | string
 }
@@ -261,7 +261,7 @@ interface HistogramChartProps {
 export function HistogramChart({
   bins,
   counts,
-  zeroLine = true,
+  bin_width = 250,
   markers = [],
   height = 320,
 }: HistogramChartProps) {
@@ -274,91 +274,141 @@ export function HistogramChart({
   const inkMutedColor = useResolvedColor('--ink-muted')
   const paperColor = useResolvedColor('--paper')
   const overColor = useResolvedColor('--over')
+  const underColor = useResolvedColor('--under')
 
-  // Build histogram bars: bin centers and counts
-  // bins = bin edges (n+1 values), counts = n values
-  const barData = bins.slice(0, -1).map((b, i) => ({
-    x: Math.round((b + (bins[i + 1] ?? b)) / 2),
-    y: counts[i] || 0,
-  }))
+  // Build histogram bar data: each bin becomes a bar at its center value
+  const barData = bins.slice(0, -1).map((start, i) => {
+    const end = bins[i + 1] ?? start + bin_width
+    const center = (start + end) / 2
+    const count = counts[i] || 0
+    return {
+      x: center,
+      y: count,
+      binStart: Math.round(start),
+      binEnd: Math.round(end),
+      color: center >= 0 ? overColor : underColor,
+    }
+  })
 
-  const hasData = barData.some((d) => d.y > 0)
+  const totalCount = barData.reduce((sum, d) => sum + d.y, 0)
+  const hasData = totalCount > 0
+  const maxCount = hasData ? Math.max(...barData.map((d) => d.y)) : 0
+  const yMax = maxCount > 0 ? Math.ceil(maxCount * 1.1) : 10
+
+  // Build markLine data: zero line at x=0, plus P-markers
+  const markLineData: any[] = [
+    {
+      xAxis: 0,
+      label: { show: false },
+      lineStyle: { color: inkMutedColor, width: 1, type: 'dashed' },
+    },
+  ]
+
+  markers.forEach((m) => {
+    markLineData.push({
+      xAxis: m.value,
+      label: {
+        show: true,
+        formatter: m.label,
+        position: 'insideStartTop',
+        color: m.color || overColor,
+        fontSize: 10,
+        fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+        backgroundColor: paperColor,
+        padding: [2, 6],
+        borderColor: m.color || overColor,
+        borderWidth: 1,
+        borderRadius: 2,
+      },
+      lineStyle: { color: m.color || overColor, width: 1, type: 'dashed' },
+    })
+  })
 
   const option = useCallback(() => {
-    const series: any[] = [
-      {
-        type: 'bar',
-        name: 'Count',
-        data: barData.map((d) => d.y),
-        color: accentColor,
-        barWidth: '100%',
-        itemStyle: {
-          borderRadius: [2, 2, 0, 0],
-          opacity: 1,
-        },
-        emphasis: {
-          itemStyle: {
-            opacity: 0.85,
-          },
-        },
-      },
-    ]
-
-    // Add zero line as a reference (value 0 on y-axis)
-    if (zeroLine) {
-      series.push({
-        type: 'line',
-        name: 'Zero error',
-        data: barData.map(() => 0),
-        color: inkMutedColor,
-        lineStyle: { width: 1, type: 'dashed' },
-        symbol: 'none',
-        z: 10,
-      })
-    }
-
-    // Add percentile markers at their x-axis values
-    markers.forEach((m) => {
-      series.push({
-        type: 'line',
-        name: m.label,
-        data: barData.map(() => m.value),
-        color: m.color || overColor,
-        lineStyle: { width: 1, type: 'dashed' },
-        symbol: 'none',
-        z: 10,
-      })
-    })
-
     return {
-      ...baseOption({ bottom: 50, yFormatter: (v: number) => Math.round(v).toString(), ruleColor, inkColor, inkMutedColor, paperColor }),
-      title: {
-        text: 'Error distribution (MW)',
-        left: 'left',
-        top: 12,
-        textStyle: {
-          fontSize: 16,
-          fontWeight: 400,
-          fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif',
-          color: inkColor,
+      ...baseOption({
+        bottom: 55,
+        xLabelRotate: 0,
+        yFormatter: (v: number) => Math.round(v).toString(),
+        ruleColor,
+        inkColor,
+        inkMutedColor,
+        paperColor,
+      }),
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: paperColor,
+        borderColor: ruleColor,
+        textStyle: { color: inkColor, fontSize: 11, fontFamily: 'ui-monospace, monospace' },
+        formatter: (params: any) => {
+          const d = params.data
+          if (!d) return ''
+          const start = d.binStart
+          const end = d.binEnd
+          const count = d.y
+          const share = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : '0'
+          return `${start} to ${end} MW<br/>${count} half-hours (${share}%)`
         },
       },
       xAxis: {
         ...baseOption({}).xAxis,
-        data: barData.map((d) => String(d.x)),
+        type: 'value',
+        min: bins[0],
+        max: bins[bins.length - 1],
         name: 'Signed error (MW)',
         nameLocation: 'center',
         nameGap: 35,
+        axisLabel: {
+          fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+          fontSize: 9,
+          color: inkMutedColor,
+          formatter: (v: number) => `${Math.round(v)}`,
+        },
+        splitLine: { show: false },
+        axisLine: { lineStyle: { color: ruleColor } },
+        axisTick: { show: true, length: 3 },
       },
       yAxis: {
         ...baseOption({}).yAxis,
-        name: 'Count',
+        name: 'Half-hours',
         nameLocation: 'center',
         nameGap: 50,
+        max: yMax,
+        min: 0,
+        splitLine: {
+          show: true,
+          lineStyle: { color: ruleColor, type: 'solid', width: 0.5 },
+        },
       },
-      series,
+      series: [
+        {
+          type: 'bar',
+          name: 'Count',
+          data: barData.map((d) => ({
+            x: d.x,
+            y: d.y,
+            binStart: d.binStart,
+            binEnd: d.binEnd,
+            itemStyle: { color: d.color, opacity: 1 },
+          })),
+          color: overColor,
+          barWidth: Math.max(4, Math.min(30, bin_width / 2)),
+          barMaxWidth: 40,
+          itemStyle: {
+            borderRadius: [2, 2, 0, 0],
+            opacity: 1,
+          },
+          emphasis: {
+            itemStyle: { opacity: 0.85 },
+          },
+          markLine: {
+            data: markLineData,
+            animation: false,
+          },
+        },
+      ],
     }
-  }, [bins, counts, zeroLine, markers, accentColor, ruleColor, inkColor, inkMutedColor, paperColor, overColor])
+  }, [bins, counts, bin_width, markers, totalCount, maxCount, yMax, accentColor, ruleColor, inkColor, inkMutedColor, paperColor, overColor, underColor])
 
   return (
     <div style={{ height }} className="w-full flex flex-col items-center justify-center">
@@ -373,3 +423,4 @@ export function HistogramChart({
     </div>
   )
 }
+
