@@ -22,6 +22,7 @@ from app.domain.slices import (
     compute_daily,
     compute_error_distribution,
     compute_wind_level_terciles,
+    compute_by_horizon_all_vintages,
 )
 from app.main import get_snapshot, get_precomputed_metrics, update_computed_metrics_cache
 
