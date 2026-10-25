@@ -160,5 +160,11 @@ python -m backend.ingest.cli refresh --from 2026-01-01 --to 2026-01-31
 python -m backend.ingest.cli status
 ```
 
+This project was developed with assistance from AI tools including:
+- Kilo Code (agentic coding harness powered by NVIDIA Nemotron 3.5 Super VL) for frontend/backend implementation, debugging, and deployment guidance
+- Claude Sonnet 5.5 for architecture planning
+
+All code was reviewed and validated by myself.
+
 ### Note for reviewer
 The recorded video does not contain latest optimizations applied.
