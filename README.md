@@ -211,6 +211,9 @@ python -m backend.ingest.cli refresh --from 2026-12-30 --to 2026-12-31
 - All calculations based on real Elexon data
 - Full transparency about data provenance
 
+### Note for reviewer
+The recorded video does not contain latest optimizations applied.
+
 **If real data is unavailable**:
 - System falls back to synthetic data generation
 - Manifest will show `"data_source": "synthetic"`
