@@ -51,6 +51,44 @@ def compute_by_horizon(aligned_pairs: pd.DataFrame) -> pd.DataFrame:
     return compute_metrics_by_group(df, "horizon_bucket")
 
 
+def compute_by_horizon_all_vintages(windfor_df: pd.DataFrame, fuelhh_df: pd.DataFrame,
+                                     from_date: str, to_date: str) -> pd.DataFrame:
+    """Compute accuracy by horizon using ALL forecast vintages (not just decision forecast).
+
+    Loads every WINDFOR publish whose startTime falls in the date range, keeps only
+    publishTime < startTime (no future knowledge), joins with actuals, and buckets by
+    horizon_h = startTime - publishTime.
+    """
+    from app.domain.errors import join_forecast_actual
+
+    from_dt = pd.Timestamp(from_date).tz_localize("UTC")
+    to_dt = pd.Timestamp(to_date).tz_localize("UTC")
+
+    # All vintages whose startTime falls in the date range
+    mask = (
+        (windfor_df['startTime'] >= from_dt) &
+        (windfor_df['startTime'] <= to_dt + pd.Timedelta(days=1)) &
+        (windfor_df['publishTime'] < windfor_df['startTime'])
+    )
+    vintages = windfor_df[mask].copy()
+
+    if vintages.empty:
+        return pd.DataFrame()
+
+    # Join with actuals
+    aligned = join_forecast_actual(vintages, fuelhh_df)
+
+    if aligned.empty:
+        return pd.DataFrame()
+
+    # Compute horizon_h
+    aligned['horizon_h'] = (aligned['startTime'] - aligned['publishTime']).dt.total_seconds() / 3600
+
+    # Bucket and compute metrics
+    df = add_horizon_bucket(aligned)
+    return compute_metrics_by_group(df, "horizon_bucket")
+
+
 def compute_by_hour(aligned_pairs: pd.DataFrame, tz: str = "Europe/London") -> pd.DataFrame:
     """Compute accuracy by hour of day (London local)."""
     df = add_hour_of_day(aligned_pairs, tz)

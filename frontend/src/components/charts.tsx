@@ -3,253 +3,292 @@ import ReactECharts from 'echarts-for-react'
 import { useTheme } from '../context/ThemeContext'
 import { getEChartsTheme } from './echartsTheme'
 
-interface LineChartProps {
-  data: Array<{ x: string | number; y: number }>
+interface BaseChartProps {
   title?: string
-  yAxisLabel?: string
-  xAxisLabel?: string
-  color?: string
   height?: number | string
   className?: string
+  yAxisLabel?: string
+  xAxisLabel?: string
 }
 
-export function LineChart({
-  data,
+/** Common ECharts option base with the publication theme's styling */
+function baseOption({
   title,
-  yAxisLabel = 'MW',
-  xAxisLabel = 'Time',
-  color,
-  height = 320,
-  className,
-}: LineChartProps) {
-  const { theme } = useTheme()
-  const echartsTheme = getEChartsTheme(theme === 'dark')
-
-  const option = useCallback(() => ({
-    title: title ? { text: title, left: 'left', top: 10, textStyle: { fontSize: 14, fontWeight: 400, fontFamily: 'Georgia, serif', color: 'var(--ink)' } } : undefined,
-    tooltip: { trigger: 'axis', axisPointer: { type: 'line' }, backgroundColor: 'var(--paper)', borderColor: 'var(--rule)', textStyle: { color: 'var(--ink)', fontSize: 11, fontFamily: 'ui-monospace, monospace' } },
+  yAxisLabel,
+  xAxisLabel,
+  bottom = 45,
+  xLabelRotate = 0,
+}: BaseChartProps & { bottom?: number; xLabelRotate?: number }) {
+  return {
+    title: title
+      ? {
+          text: title,
+          left: 'left',
+          top: 12,
+          textStyle: {
+            fontSize: 16,
+            fontWeight: 400,
+            fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif',
+            color: 'var(--ink)',
+          },
+        }
+      : undefined,
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'line' },
+      backgroundColor: 'var(--paper)',
+      borderColor: 'var(--rule)',
+      textStyle: { color: 'var(--ink)', fontSize: 11, fontFamily: 'ui-monospace, monospace' },
+    },
+    grid: { left: '8%', right: '6%', top: 40, bottom, containLabel: true },
     xAxis: {
       type: 'category',
-      data: data.map((d) => d.x),
-      name: xAxisLabel,
-      nameLocation: 'center',
-      nameGap: 30,
-      axisLabel: { rotate: 0, fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: '#64748b' },
-      axisLine: { lineStyle: { color: '#e2e8f0' } },
-    },
-    yAxis: {
-      type: 'value',
-      name: yAxisLabel,
-      nameLocation: 'center',
-      nameGap: 50,
-      axisLabel: { fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: '#64748b' },
-      axisLine: { lineStyle: { color: '#e2e8f0' } },
-      splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } },
-    },
-    series: [
-      {
-        type: 'line',
-        data: data.map((d) => d.y),
-        color,
-        smooth: true,
-        lineStyle: { width: 2 },
-        itemStyle: { borderWidth: 4 },
-        showSymbol: false,
+      axisLine: { lineStyle: { color: 'var(--rule)' } },
+      axisTick: { show: true, length: 3 },
+      axisLabel: {
+        fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+        fontSize: 9,
+        color: 'var(--ink-muted)',
+        rotate: xLabelRotate,
+        margin: 12,
       },
-    ],
-    grid: { left: '8%', right: '8%', bottom: '14%', top: 40 },
-  }), [data, title, yAxisLabel, xAxisLabel, color])
-
-  return (
-    <div className={className} style={{ height }}>
-      <ReactECharts option={option()} theme={echartsTheme} style={{ width: '100%', height: '100%' }} />
-    </div>
-  )
-}
-
-interface MultiLineChartProps {
-  series: Array<{
-    name: string
-    data: Array<{ x: string | number; y: number }>
-    color: string
-  }>
-  title?: string
-  yAxisLabel?: string
-  xAxisLabel?: string
-  height?: number | string
-  className?: string
-}
-
-export function MultiLineChart({
-  series,
-  title,
-  yAxisLabel = 'MW',
-  xAxisLabel = 'Time',
-  height = 360,
-  className,
-}: MultiLineChartProps) {
-  const { theme } = useTheme()
-  const echartsTheme = getEChartsTheme(theme === 'dark')
-
-  const option = useCallback(() => ({
-    title: title ? { text: title, left: 'left', top: 10, textStyle: { fontSize: 14, fontWeight: 600, fontFamily: 'ui-serif, Georgia, serif', color: '#0f172a' } } : undefined,
-    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
-    legend: series.length > 1 ? { data: series.map((s) => s.name), top: 10, left: 'left', textStyle: { fontSize: 12, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: '#64748b' } } : undefined,
-    xAxis: {
-      type: 'category',
-      data: series[0]?.data.map((d) => d.x) || [],
+      splitLine: { show: false },
       name: xAxisLabel,
       nameLocation: 'center',
       nameGap: 30,
-      axisLabel: { rotate: 0, fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: '#64748b' },
-      axisLine: { lineStyle: { color: '#e2e8f0' } },
     },
     yAxis: {
       type: 'value',
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: {
+        fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+        fontSize: 9,
+        color: 'var(--ink-muted)',
+        formatter: (v: number) => `${Math.round(v)} MW`,
+      },
+      splitLine: {
+        show: true,
+        lineStyle: { color: 'var(--rule)', type: 'solid', width: 0.5 },
+      },
       name: yAxisLabel,
       nameLocation: 'center',
       nameGap: 50,
-      axisLabel: { fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: '#64748b' },
-      axisLine: { lineStyle: { color: '#e2e8f0' } },
-      splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } },
     },
-    series: series.map((s) => ({
-      name: s.name,
-      type: 'line',
-      data: s.data.map((d) => d.y),
-      color: s.color,
-      smooth: true,
-      lineStyle: { width: 2 },
-      showSymbol: false,
-    })),
-    grid: { left: '8%', right: '8%', bottom: '14%', top: series.length > 1 ? 45 : 40 },
-  }), [series, title, yAxisLabel, xAxisLabel])
-
-  return (
-    <div className={className} style={{ height }}>
-      <ReactECharts option={option()} theme={echartsTheme} style={{ width: '100%', height: '100%' }} />
-    </div>
-  )
+  } as Record<string, any>
 }
 
 interface BarChartProps {
   data: Array<{ x: string | number; y: number }>
-  title?: string
-  yAxisLabel?: string
-  xAxisLabel?: string
-  color?: string
+  series2?: Array<{ x: string | number; y: number }>
+  series2Name?: string
+  series2Color?: string
   height?: number | string
-  className?: string
 }
 
 export function BarChart({
   data,
-  title,
-  yAxisLabel,
-  xAxisLabel = 'Category',
+  series2,
+  series2Name = 'Bias',
+  series2Color = 'var(--over)',
   height = 320,
-  className,
 }: BarChartProps) {
   const { theme } = useTheme()
   const echartsTheme = getEChartsTheme(theme === 'dark')
 
-  const option = useCallback(() => ({
-    title: title ? { text: title, left: 'left', top: 10, textStyle: { fontSize: 14, fontWeight: 400, fontFamily: 'Georgia, serif', color: 'var(--ink)' } } : undefined,
-    tooltip: { trigger: 'axis', axisPointer: { type: 'line' }, backgroundColor: 'var(--paper)', borderColor: 'var(--rule)', textStyle: { color: 'var(--ink)', fontSize: 11, fontFamily: 'ui-monospace, monospace' } },
-    xAxis: {
-      type: 'category',
-      data: data.map((d) => d.x),
-      name: xAxisLabel,
-      nameLocation: 'center',
-      nameGap: 30,
-      axisLabel: { rotate: -45, fontSize: 9, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: 'var(--ink-muted)', interval: 0, margin: 15 },
-      axisLine: { lineStyle: { color: 'var(--rule)' } },
-      axisTick: { show: true, length: 3 },
-    },
-    yAxis: {
-      type: 'value',
-      name: yAxisLabel,
-      nameLocation: 'center',
-      nameGap: 50,
-      axisLabel: { fontSize: 9, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: 'var(--ink-muted)' },
-      axisLine: { lineStyle: { color: 'var(--rule)' } },
-      splitLine: { lineStyle: { color: 'var(--rule)', type: 'dashed', width: 0.5 } },
-    },
-    series: [
+  const option = useCallback(() => {
+    const base = baseOption({
+      bottom: series2 ? 55 : 45,
+      xLabelRotate: -45,
+    })
+
+    const series: any[] = [
       {
         type: 'bar',
+        name: 'MAE',
         data: data.map((d) => d.y),
         color: 'var(--accent)',
-        barWidth: '40%',
+        barWidth: '50%',
         itemStyle: { borderRadius: [2, 2, 0, 0] },
       },
-    ],
-    grid: { left: '10%', right: '8%', bottom: '18%', top: 40 },
-  }), [data, title, yAxisLabel, xAxisLabel])
+    ]
+
+    if (series2 && series2.length > 0) {
+      series.push({
+        type: 'line',
+        name: series2Name,
+        data: series2.map((d) => d.y),
+        color: series2Color,
+        symbol: 'none',
+        lineStyle: { width: 1.5, type: 'solid' },
+        yAxisIndex: 0,
+      })
+    }
+
+    if (series2 && series2.length > 0) {
+      base.legend = {
+        data: ['MAE', series2Name],
+        top: 12,
+        left: 'left',
+        textStyle: { fontSize: 11, fontFamily: 'ui-monospace, monospace', color: 'var(--ink-muted)' },
+      }
+    }
+
+    return {
+      ...base,
+      xAxis: {
+        ...base.xAxis,
+        data: data.map((d) => String(d.x)),
+      },
+      series,
+    }
+  }, [data, series2, series2Name, series2Color])
 
   return (
-    <div className={className} style={{ height }}>
+    <div style={{ height }} className="w-full">
       <ReactECharts option={option()} theme={echartsTheme} style={{ width: '100%', height: '100%' }} />
     </div>
   )
 }
 
-interface HeatmapProps {
-  data: Array<{ x: string | number; y: string | number; value: number }>
-  title?: string
+interface LineChartProps {
+  data: Array<{ x: string | number; y: number }>
+  smooth?: boolean
+  color?: string
   height?: number | string
-  className?: string
 }
 
-export function HeatmapChart({
+export function LineChart({
   data,
-  title,
-  height = 300,
-  className,
-}: HeatmapProps) {
+  smooth = false,
+  color = 'var(--accent)',
+  height = 320,
+}: LineChartProps) {
   const { theme } = useTheme()
   const echartsTheme = getEChartsTheme(theme === 'dark')
 
-  const option = useCallback(() => ({
-    title: title ? { text: title, left: 'left', top: 10, textStyle: { fontSize: 14, fontWeight: 600, fontFamily: 'ui-serif, Georgia, serif', color: '#0f172a' } } : undefined,
-    tooltip: { trigger: 'item' },
-    xAxis: {
-      type: 'category',
-      data: [...new Set(data.map((d) => d.x))],
-      name: 'Hour of Day',
-      nameLocation: 'center',
-      nameGap: 30,
-      axisLabel: { fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: '#64748b' },
-    },
-    yAxis: {
-      type: 'category',
-      data: [...new Set(data.map((d) => d.y))],
-      name: 'Metric',
-      nameLocation: 'center',
-      nameGap: 50,
-      axisLabel: { fontSize: 11, fontFamily: 'ui-monospace, SFMono-Regular, monospace', color: '#64748b' },
-    },
-    visualMap: {
-      min: Math.min(...data.map((d) => d.value)),
-      max: Math.max(...data.map((d) => d.value)),
-      calculable: true,
-      orient: 'horizontal',
-      left: 'center',
-      bottom: 20,
-      textStyle: { color: '#64748b', fontSize: 11 },
-    },
-    series: [
-      {
-        type: 'heatmap',
-        data: data.map((d) => [d.x, d.y, d.value]),
-        label: { show: true },
+  const option = useCallback(() => {
+    return {
+      ...baseOption({ bottom: 45, xLabelRotate: -45 }),
+      xAxis: {
+        ...baseOption({}).xAxis,
+        data: data.map((d) => String(d.x)),
       },
-    ],
-    grid: { left: '8%', right: '8%', bottom: '22%', top: 40 },
-  }), [data, title, height])
+      series: [
+        {
+          type: 'line',
+          data: data.map((d) => d.y),
+          color,
+          symbol: 'none',
+          lineStyle: { width: 1.5 },
+          smooth,
+          itemStyle: { borderWidth: 0 },
+        },
+      ],
+    }
+  }, [data, smooth, color])
 
   return (
-    <div className={className} style={{ height }}>
+    <div style={{ height }} className="w-full">
+      <ReactECharts option={option()} theme={echartsTheme} style={{ width: '100%', height: '100%' }} />
+    </div>
+  )
+}
+
+interface HistogramChartProps {
+  bins: number[]
+  counts: number[]
+  zeroLine?: boolean
+  markers?: Array<{ value: number; label: string; color?: string }>
+  height?: number | string
+}
+
+export function HistogramChart({
+  bins,
+  counts,
+  zeroLine = true,
+  markers = [],
+  height = 320,
+}: HistogramChartProps) {
+  const { theme } = useTheme()
+  const echartsTheme = getEChartsTheme(theme === 'dark')
+
+  const option = useCallback(() => {
+    // Build histogram bars: bin centers and counts
+    const barData = bins.map((b, i) => ({
+      x: Math.round(b),
+      y: counts[i] || 0,
+    }))
+
+    const series: any[] = [
+      {
+        type: 'bar',
+        name: 'Count',
+        data: barData.map((d) => d.y),
+        color: 'var(--accent)',
+        barWidth: '90%',
+        itemStyle: { borderRadius: [2, 2, 0, 0] },
+      },
+    ]
+
+    // Add zero line as a reference
+    if (zeroLine) {
+      series.push({
+        type: 'line',
+        name: 'Zero error',
+        data: barData.map(() => 0),
+        color: 'var(--ink-muted)',
+        lineStyle: { width: 1, type: 'dashed' },
+        symbol: 'none',
+        z: 10,
+      })
+    }
+
+    // Add percentile markers
+    markers.forEach((m) => {
+      series.push({
+        type: 'line',
+        name: m.label,
+        data: barData.map(() => m.value),
+        color: m.color || 'var(--over)',
+        lineStyle: { width: 1, type: 'dashed' },
+        symbol: 'none',
+        z: 10,
+      })
+    })
+
+    return {
+      ...baseOption({ bottom: 50 }),
+      title: {
+        text: 'Error distribution (MW)',
+        left: 'left',
+        top: 12,
+        textStyle: {
+          fontSize: 16,
+          fontWeight: 400,
+          fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif',
+          color: 'var(--ink)',
+        },
+      },
+      xAxis: {
+        ...baseOption({}).xAxis,
+        data: barData.map((d) => String(d.x)),
+        name: 'Signed error (MW)',
+        nameLocation: 'center',
+        nameGap: 35,
+      },
+      yAxis: {
+        ...baseOption({}).yAxis,
+        name: 'Count',
+        nameLocation: 'center',
+        nameGap: 50,
+      },
+      series,
+    }
+  }, [bins, counts, zeroLine, markers])
+
+  return (
+    <div style={{ height }} className="w-full">
       <ReactECharts option={option()} theme={echartsTheme} style={{ width: '100%', height: '100%' }} />
     </div>
   )

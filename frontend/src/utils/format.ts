@@ -92,3 +92,64 @@ export function capitalize(str: string): string {
   if (!str) return str
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
+
+/**
+ * Format a signed MW value with direction words (above/below).
+ * Positive = over-forecast = forecast above actual = shortfall risk.
+ */
+export function formatBiasDirection(value: number): { direction: 'above' | 'below'; absValue: number } {
+  if (value >= 0) return { direction: 'above', absValue: value }
+  return { direction: 'below', absValue: Math.abs(value) }
+}
+
+/**
+ * Build the accuracy summary sentence for a date range.
+ * e.g. "Over 14 to 17 January, forecasts ran 337 MW below actual wind on average,
+ * and 1 in 20 half-hours was off by more than 1.1 GW."
+ */
+export function buildAccuracySummary(
+  fromDate: string,
+  toDate: string,
+  bias: number | null | undefined,
+  p95OverMw: number | null | undefined,
+): string {
+  if (bias === null || bias === undefined || isNaN(bias)) {
+    return `Over ${fromDate} to ${toDate}, no accuracy data available.`
+  }
+
+  const { direction, absValue } = formatBiasDirection(bias)
+  const nIn20 = p95OverMw !== null && p95OverMw !== undefined && !isNaN(p95OverMw)
+    ? `1 in 20 half-hours was off by more than ${formatMW(p95OverMw)}`
+    : ''
+
+  return `Over ${fromDate} to ${toDate}, forecasts ran ${absValue.toFixed(0)} MW ${direction} actual wind on average.${nIn20 ? ' ' + nIn20 : ''}`
+}
+
+/**
+ * Build a plain-English bias explanation line.
+ * e.g. "On average the forecast was 337 MW below actual wind."
+ */
+export function buildBiasLine(bias: number | null | undefined): string {
+  if (bias === null || bias === undefined || isNaN(bias)) return ''
+  const { direction, absValue } = formatBiasDirection(bias)
+  return `On average the forecast was ${absValue.toFixed(0)} MW ${direction} actual wind.`
+}
+
+/**
+ * Tooltip definitions for accuracy metrics
+ */
+export const METRIC_TOOLTIPS: Record<string, string> = {
+  bias: 'Mean signed error (forecast − actual). Positive = over-forecast = shortfall risk for buyer.',
+  mae: 'Mean absolute error. Average magnitude of forecast error, regardless of direction.',
+  rmse: 'Root mean square error. Penalises large errors more than MAE.',
+  nmae: 'Normalised MAE (MAE ÷ mean actual wind). Dimensionless ratio for comparing across scales.',
+}
+
+/**
+ * Count days in an inclusive date range
+ */
+export function countDaysInRange(fromDate: string, toDate: string): number {
+  const from = new Date(fromDate + 'T00:00:00')
+  const to = new Date(toDate + 'T00:00:00')
+  return Math.round((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)) + 1
+}

@@ -14,10 +14,12 @@ from app.api.schemas import (
     AccuracySummaryResponse,
 )
 from app.config import settings
+from app.data.loader import load_snapshot
 from app.domain.asof import select_decision_forecast
 from app.domain.errors import join_forecast_actual
 from app.domain.slices import (
     compute_by_horizon,
+    compute_by_horizon_all_vintages,
     compute_by_hour,
     compute_by_wind_level,
     compute_daily,
@@ -118,14 +120,19 @@ async def get_accuracy_by_horizon(
     from_date: str,
     to_date: str,
 ):
-    """Get accuracy by forecast horizon."""
+    """Get accuracy by forecast horizon using ALL forecast vintages."""
     _validate_range(from_date, to_date)
 
-    aligned = _load_aligned_pairs(from_date, to_date, settings.cutoff_hour, settings.cutoff_minute)
-    if aligned.empty:
+    snapshot_path = settings.snapshot_path
+    snapshot = load_snapshot(snapshot_path)
+
+    results = compute_by_horizon_all_vintages(
+        snapshot.windfor, snapshot.fuelhh, from_date, to_date
+    )
+
+    if results.empty:
         raise HTTPException(status_code=404, detail="No data for date range")
 
-    results = compute_by_horizon(aligned)
     results_list = results.to_dict("records")
 
     return AccuracyByHorizonResponse(

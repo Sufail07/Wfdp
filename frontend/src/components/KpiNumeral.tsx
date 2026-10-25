@@ -4,13 +4,27 @@ interface KpiNumeralProps {
   value: string | number
   label: string
   unit?: string
+  n?: number
+  nDays?: number
   sparkline?: number[]
   change?: string
   trend?: 'up' | 'down' | 'neutral'
+  helpText?: string
 }
 
-export function KpiNumeral({ value, label, unit, sparkline, change, trend }: KpiNumeralProps) {
+export function KpiNumeral({
+  value,
+  label,
+  unit,
+  n,
+  nDays,
+  sparkline,
+  change,
+  trend,
+  helpText,
+}: KpiNumeralProps) {
   const trendColor = trend === 'up' ? 'text-over' : trend === 'down' ? 'text-under' : 'text-ink-muted'
+  const nText = n !== undefined && nDays !== undefined ? `${n} half-hours · ${nDays} days` : n !== undefined ? `${n} samples` : ''
 
   return (
     <div className="kpi-numeral">
@@ -19,6 +33,12 @@ export function KpiNumeral({ value, label, unit, sparkline, change, trend }: Kpi
         {unit && <span className="kpi-unit">{unit}</span>}
       </div>
       <span className="kpi-label">{label}</span>
+      {nText && (
+        <p className="text-xs font-mono text-ink-muted mt-0.5">{nText}</p>
+      )}
+      {helpText && (
+        <p className="text-xs font-mono text-ink-muted mt-0.5">{helpText}</p>
+      )}
       {change && (
         <div className={`mt-1 font-mono text-xs font-medium ${trendColor}`}>{change}</div>
       )}

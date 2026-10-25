@@ -1,4 +1,4 @@
-import { MultiLineChart } from '../../components/charts'
+import { TimeChart } from '../../components/TimeChart'
 
 interface MainChartProps {
   decisionForecast: Array<{ x: string; y: number }>
@@ -15,43 +15,36 @@ export function MainChart({
 }: MainChartProps) {
   const series: Array<{
     name: string
-    data: Array<{ x: string | number; y: number }>
-    color: string
+    data: Array<{ x: string; y: number }>
+    color?: string
   }> = [
     {
       name: 'Decision Forecast',
-      data: decisionForecast,
-      color: '#0f172a',
+      data: decisionForecast.map((d) => ({ x: String(d.x), y: d.y })),
+      color: 'var(--accent)',
     },
   ]
 
   if (riskAdjusted && riskAdjusted.length > 0) {
     series.push({
       name: 'Risk-Adjusted',
-      data: riskAdjusted,
-      color: '#64748b',
+      data: riskAdjusted.map((d) => ({ x: String(d.x), y: d.y })),
+      color: 'var(--ink-muted)',
     })
   }
 
   if (actuals && actuals.length > 0) {
     series.push({
       name: 'Actuals',
-      data: actuals,
-      color: '#94a3b8',
+      data: actuals.map((d) => ({ x: String(d.x), y: d.y })),
+      color: 'var(--over)',
     })
   }
 
   return (
     <div className="card">
       <h3 className="section-title">{title}</h3>
-      <div className="h-[480px]">
-        <MultiLineChart
-          series={series}
-          yAxisLabel="MW"
-          xAxisLabel="Delivery Period"
-          height={480}
-        />
-      </div>
+      <TimeChart series={series} showCutoff={true} height={440} />
     </div>
   )
 }
