@@ -1,7 +1,7 @@
 """Accuracy endpoints - summary, by-horizon, by-hour, by-wind-level, daily, error-distribution."""
 
 import pandas as pd
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from app.api.schemas import (
     AccuracySummaryResponse,
