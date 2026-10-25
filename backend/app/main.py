@@ -76,7 +76,8 @@ async def lifespan(app: FastAPI):
     from datetime import date
     from app.domain.errors import join_forecast_actual
     from app.domain.slices import (
-        compute_by_hour, compute_by_wind_level, compute_daily, compute_error_distribution
+        compute_by_hour, compute_by_wind_level, compute_daily, compute_error_distribution,
+        compute_by_horizon_all_vintages, compute_wind_level_terciles
     )
     
     aligned = join_forecast_actual(
