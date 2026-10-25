@@ -1,28 +1,26 @@
 """FastAPI app factory with security headers, structured logging, and lazy snapshot cache."""
 
+import logging
+import sys
+import uuid
+from contextlib import asynccontextmanager
+from typing import Any
+
 import pandas as pd
 
-from app.domain.metrics import compute_metrics
-from app.domain.slices import (
-    compute_by_horizon_all_vintages,
-    compute_by_hour,
-    compute_by_wind_level,
-    compute_daily,
-    compute_error_distribution,
-    compute_wind_level_terciles,
-)
-from app.domain.risk import compute_risk_band
-from app.domain.asof import select_decision_forecast
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from app.config import settings
 from app.data.loader import SnapshotData, load_snapshot
 from app.repository.interface import PandasForecastRepository
-from app.config import settings
+from app.domain.asof import select_decision_forecast
+from app.domain.metrics import compute_metrics
 
 # Module-level lazy cache (one per serverless instance)
 _snapshot_data: SnapshotData | None = None
 _repository: PandasForecastRepository | None = None
-
-# Precomputed metrics cache
-_computed_metrics_cache: dict[str, Any] = {}
 
 # Precomputed metrics cache
 _computed_metrics_cache: dict[str, Any] = {}
@@ -146,12 +144,6 @@ def update_computed_metrics_cache(cache_key: str, value: Any) -> None:
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(
-        title="Wind Forecast Decision Portal API",
-        description="API for UK utility wind forecast decision-making",
-        version="0.1.0",
-        lifespan=lifespan,
-    )
     app = FastAPI(
         title="Wind Forecast Decision Portal API",
         description="API for UK utility wind forecast decision-making",
