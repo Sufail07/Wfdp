@@ -1,4 +1,7 @@
-"""Generate mock snapshot data for development/testing."""
+"""Generate mock snapshot data for development/testing when real data is unavailable.
+
+This function is used as a fallback when real Elexon data cannot be obtained from APIs.
+"""
 
 import pandas as pd
 import numpy as np
@@ -7,11 +10,15 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from ingest.snapshot import write_snapshot
 
 
 def generate_mock_fuelhh() -> pd.DataFrame:
-    """Generate mock FUELHH data for January 2026."""
+    """Generate mock FUELHH data for January 2026.
+
+    This is used as fallback when real Elexon API data is unavailable.
+    """
     np.random.seed(42)
     
     dates = pd.date_range("2026-01-01", "2026-01-31", freq="D")
@@ -45,7 +52,10 @@ def generate_mock_fuelhh() -> pd.DataFrame:
 
 
 def generate_mock_windfor() -> pd.DataFrame:
-    """Generate mock WINDFOR data for January 2026."""
+    """Generate mock WINDFOR data for January 2026.
+
+    This is used as fallback when real Elexon API data is unavailable.
+    """
     np.random.seed(43)
     
     # Delivery dates: 2026-01-02 to 2026-02-01 (D-1 09:00 cutoff)
@@ -102,6 +112,7 @@ def generate_mock_windfor() -> pd.DataFrame:
 
 def main():
     print("Generating mock snapshot data for January 2026...")
+    print("(This is fallback data when real Elexon API is unavailable)")
     
     fuelhh = generate_mock_fuelhh()
     windfor = generate_mock_windfor()
@@ -114,6 +125,12 @@ def main():
     
     print(f"Snapshot written to {snapshot_path}")
     print(f"Manifest: {manifest}")
+    print()
+    print("IMPORTANT: This is synthetic mock data.")
+    print("To use real Elexon data:")
+    print("1. Obtain Elexon API credentials")
+    print("2. Set ELEXON_API_KEY environment variable")
+    print("3. Run the ingestion script with real API endpoints")
 
 
 if __name__ == "__main__":

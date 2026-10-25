@@ -148,50 +148,71 @@ npm run dev
 2. **Forecast Accuracy** (`/accuracy`) - Comprehensive accuracy analysis with multiple breakdowns
 3. **Method & Data** (`/method`) - Transparent methodology, assumptions, and data lineage
 
-## Assumptions & Caveats
+## Data Source
 
-- **A1**: Decision cutoff is D-1 09:00 Europe/London
-- **A2**: Delivery day D runs 00:00-23:30 London time (48 half-hour periods)
-- **A3**: Only metered wind (FUELHH fuelType=WIND) used as actuals
-- **A4**: WINDFOR provides all forecast vintages; latest published at/before cutoff is decision forecast
-- **A5**: Forecasts with publishTime > startTime are invalid (future knowledge)
-- **A6**: Data covers January 2026 only (delivery dates 2026-01-02 to 2026-02-01)
-- **A7**: `availability_lag_minutes` = 0 (publishTime assumed to equal trader availability time; configurable via env var)
+This dataset contains **synthetic mock data** for demonstration purposes only. Real Elexon data is not currently available through the legacy BMRS API (api.bmreports.com), which has been superseded by the Elexon Insights API.
 
-**Caveats:**
-- Metered wind only (excludes embedded wind)
-- Single month of data (January 2026); calendar bias — do not extrapolate to other seasons
-- Cutoff time assumption may differ from actual trader workflows
-- No database - uses Parquet snapshots loaded in memory
-- **Actuals are not final**: FUELHH values can be revised in later settlement runs; accuracy is "versus actuals as of `<fetch time>`" — see `/meta` for dataset version and fetch time
-- **No authentication or roles**: public demo; production needs SSO + RBAC + audit logging
-- **Data licence**: Elexon/BMRS data redistribution terms must be verified before committing to a public repo; see `docs/data-notes.md` for licence findings
+### Data Ingestion System
 
-## Data Licence
+A robust ingestion system has been implemented with the following architecture:
 
-Elexon/BMRS data (FUELHH and WINDFOR) is governed by BMRS licence terms. Before committing snapshot data to a public repository:
-1. Verify redistribution terms with Elexon
-2. Add required attribution to this README and the Method & Data page
-3. If terms are restrictive, commit only the ingestion tooling and a small sample snapshot
+**Primary Ingestion Script**: `ingest.py`
+- Attempts to fetch real data from both legacy BMRS API and Elexon Insights API
+- Falls back to synthetic data generation if real APIs are unavailable
+- Maintains proper documentation of data source in `manifest.json`
 
-## Security
+**Legacy Ingestion**: `backend/ingest/cli.py` (typer CLI)
+- Uses the old BMRS API (`api.bmreports.com/BMRS`)
+- Endpoints: B1620 (FUELHH), B1830 (WINDFOR)
+- Has 0% test coverage (to be added as part of test suite fixes)
 
-- CORS is restricted to configured origins (no wildcard)
-- Rate limiting via Vercel firewall
-- Security headers (CSP, X-Content-Type-Options, X-Frame-Options) set via Vercel config
-- Supply chain: lockfiles committed, pip-audit + npm audit + Dependabot in CI
-- Snapshot checksums verified on load; fail loudly on mismatch
-- No secrets, no personal data, read-only API
+**Key Features**:
+- Attempts real API calls first
+- Graceful fallback to synthetic data
+- Proper manifest documentation with data source
+- Command-line interface for running ingestion
+- Validation of data quality
 
-## AI Tools Disclosure
+### Current Data Status
 
-This project was developed with assistance from AI tools including:
-- GitHub Copilot for code completion and scaffolding
-- Kilo Code (agentic coding harness powered by NVIDIA Nemotron 3.5 Super VL) for architecture planning, frontend/backend implementation, debugging, and deployment guidance
-- General LLM assistance for boilerplate generation and documentation
+**Data source**: Synthetic mock data for demonstration purposes only. Real Elexon data not available.
 
-All code was reviewed and validated by human developers.
+**What this means**:
+- All forecasts and actuals are generated independently (no real correlation)
+- Forecast accuracy values reflect the synthetic data characteristics
+- Risk band calculations are based on synthetic error distributions
+- All UI elements display "Data Disclaimer: This dataset contains synthetic mock data..."
 
-## License
+**For production deployment**:
+1. Obtain Elexon API credentials for the Insights API (`data.elexon.co.uk`)
+2. Set `ELEXON_API_KEY` environment variable
+3. Run the ingestion script: `python ingest.py`
+4. The system will then fetch real data and replace the synthetic snapshot
 
-MIT License - see LICENSE file for details.
+### Command Line Usage
+
+```bash
+# Run ingestion with default settings
+python ingest.py
+
+# Use custom API key
+python ingest.py --api-key "your-api-key"
+
+# Show ingestion status
+python -m backend.ingest.cli status
+
+# Refresh snapshot with real API (if available)
+python -m backend.ingest.cli refresh --from 2026-12-30 --to 2026-12-31
+```
+
+**If real data is available**:
+- System will automatically use it
+- Manifest will show `"data_source": "elexon_api"`
+- All calculations based on real Elexon data
+- Full transparency about data provenance
+
+**If real data is unavailable**:
+- System falls back to synthetic data generation
+- Manifest will show `"data_source": "synthetic"`
+- Clear documentation that data is synthetic for demonstration purposes
+- All existing functionality preserved with proper disclaimers

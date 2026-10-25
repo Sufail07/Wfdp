@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from app.api.schemas import DecisionForecastPoint, DecisionForecastResponse
 from app.config import settings
 from app.domain.asof import get_cutoff_utc, select_decision_forecast
+from app.main import get_snapshot
 
 logger = logging.getLogger("wind-forecast")
 
@@ -25,12 +26,8 @@ async def get_decision_forecast(
     except Exception:
         raise HTTPException(status_code=422, detail="Invalid delivery_date format")
 
-    # Load snapshot
-    from app.config import settings as cfg
-    from app.data.loader import load_snapshot
-
-    snapshot_path = cfg.snapshot_path
-    snapshot = load_snapshot(snapshot_path)
+    # Use cached snapshot instead of loading per request
+    snapshot = get_snapshot()
 
     # Select decision forecast
     result = select_decision_forecast(

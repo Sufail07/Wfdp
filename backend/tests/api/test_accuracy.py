@@ -15,7 +15,7 @@ client = TestClient(app)
 
 def test_decision_forecast_2026_01_02():
     """Response for 2026-01-02 has cutoff_utc of 2026-01-01T09:00:00Z, 48 points, all MW in range."""
-    resp = client.get("/decision-forecast?delivery_date=2026-01-02")
+    resp = client.get("/api/decision-forecast?delivery_date=2026-01-02")
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["delivery_date"] == "2026-01-02"
@@ -27,19 +27,19 @@ def test_decision_forecast_2026_01_02():
 
 def test_decision_forecast_out_of_range_returns_404():
     """Out-of-range delivery_date returns 404."""
-    resp = client.get("/decision-forecast?delivery_date=2025-12-31")
+    resp = client.get("/api/decision-forecast?delivery_date=2025-12-31")
     assert resp.status_code == 404, resp.text
 
 
 def test_decision_forecast_malformed_date_returns_422():
     """Malformed dates return 422."""
-    resp = client.get("/decision-forecast?delivery_date=not-a-date")
+    resp = client.get("/api/decision-forecast?delivery_date=not-a-date")
     assert resp.status_code == 422, resp.text
 
 
 def test_accuracy_summary_returns_200():
     """Accuracy summary for valid range returns 200 with metrics."""
-    resp = client.get("/accuracy/summary?from_date=2026-01-02&to_date=2026-01-08")
+    resp = client.get("/api/accuracy/summary?from_date=2026-01-02&to_date=2026-01-08")
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert "metrics" in data
@@ -54,7 +54,7 @@ def test_accuracy_summary_returns_200():
 
 def test_accuracy_by_horizon_returns_200():
     """Accuracy by horizon returns 200 with bucketed results."""
-    resp = client.get("/accuracy/by-horizon?from_date=2026-01-02&to_date=2026-01-08")
+    resp = client.get("/api/accuracy/by-horizon?from_date=2026-01-02&to_date=2026-01-08")
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert "results" in data
@@ -67,13 +67,13 @@ def test_accuracy_by_horizon_returns_200():
 
 def test_accuracy_out_of_range_returns_404():
     """Out-of-range dates return 404."""
-    resp = client.get("/accuracy/summary?from_date=2025-12-01&to_date=2025-12-05")
+    resp = client.get("/api/accuracy/summary?from_date=2025-12-01&to_date=2025-12-05")
     assert resp.status_code == 404, resp.text
 
 
 def test_accuracy_malformed_date_returns_422():
     """Malformed dates return 422."""
-    resp = client.get("/accuracy/summary?from_date=bad&to_date=also-bad")
+    resp = client.get("/api/accuracy/summary?from_date=bad&to_date=also-bad")
     assert resp.status_code == 422, resp.text
 
 

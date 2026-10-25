@@ -1,7 +1,7 @@
 """Accuracy endpoints - summary, by-horizon, by-hour, by-wind-level, daily, error-distribution."""
 
 import pandas as pd
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 
 from app.api.schemas import (
     AccuracySummaryResponse,
@@ -17,14 +17,13 @@ from app.data.loader import load_snapshot
 from app.domain.asof import select_decision_forecast
 from app.domain.errors import join_forecast_actual
 from app.domain.slices import (
-    compute_by_horizon,
-    compute_by_horizon_all_vintages,
     compute_by_hour,
     compute_by_wind_level,
     compute_daily,
     compute_error_distribution,
     compute_wind_level_terciles,
 )
+from app.main import get_snapshot, get_precomputed_metrics, update_computed_metrics_cache
 
 router = APIRouter()
 
@@ -87,15 +86,39 @@ async def get_accuracy_summary(
 ):
     """Get aggregate accuracy metrics."""
     from app.domain.metrics import compute_metrics
-
+    
     _validate_range(from_date, to_date)
-
-    aligned = _load_aligned_pairs(from_date, to_date, cutoff_hour, cutoff_minute)
+    
+    # Try to get cached aligned pairs or compute if not cached
+    cache_key = f"summary_{from_date}_{to_date}_{cutoff_hour}_{cutoff_minute}"
+    aligned = get_precomputed_metrics(cache_key)
+    
+    if aligned is None:
+        snapshot = get_snapshot()
+        
+        # Generate decision forecasts for each day in range
+        all_days = pd.date_range(from_date, to_date, freq="D")
+        all_aligned = []
+        
+        for day in all_days:
+            fcst = select_decision_forecast(
+                snapshot.windfor, day, cutoff_hour=cutoff_hour, cutoff_minute=cutoff_minute
+            )
+            if not fcst.empty:
+                aligned = join_forecast_actual(fcst, snapshot.fuelhh)
+                all_aligned.append(aligned)
+        
+        if not all_aligned:
+            raise HTTPException(status_code=404, detail="No data for date range")
+        
+        aligned = pd.concat(all_aligned, ignore_index=True)
+        update_computed_metrics_cache(cache_key, aligned)
+    
     if aligned.empty:
         raise HTTPException(status_code=404, detail="No data for date range")
-
+    
     metrics = compute_metrics(aligned)
-
+    
     return AccuracySummaryResponse(
         from_date=pd.Timestamp(from_date).date(),
         to_date=pd.Timestamp(to_date).date(),
@@ -110,14 +133,30 @@ async def get_accuracy_by_horizon(
     from_date: str,
     to_date: str,
 ):
-    """Get accuracy by forecast horizon using ALL forecast vintages."""
+    """Get accuracy by horizon using ALL forecast vintages."""
     _validate_range(from_date, to_date)
-
-    snapshot_path = settings.snapshot_path
-    snapshot = load_snapshot(snapshot_path)
-
-    results = compute_by_horizon_all_vintages(
-        snapshot.windfor, snapshot.fuelhh, from_date, to_date
+    
+    # Try to get cached data or compute if not cached
+    cache_key = f"by_horizon_{from_date}_{to_date}"
+    results = get_precomputed_metrics(cache_key)
+    
+    if results is None:
+        snapshot = get_snapshot()
+        
+        results = compute_by_horizon_all_vintages(
+            snapshot.windfor, snapshot.fuelhh, from_date, to_date
+        )
+        update_computed_metrics_cache(cache_key, results)
+    
+    if results.empty:
+        raise HTTPException(status_code=404, detail="No data for date range")
+    
+    results_list = results.to_dict("records")
+    
+    return AccuracyByHorizonResponse(
+        from_date=pd.Timestamp(from_date).date(),
+        to_date=pd.Timestamp(to_date).date(),
+        results=results_list,
     )
 
     if results.empty:
@@ -141,17 +180,40 @@ async def get_accuracy_by_hour(
 ):
     """Get accuracy by hour of day."""
     _validate_range(from_date, to_date)
-
+    
     ch = cutoff_hour if cutoff_hour is not None else settings.cutoff_hour
     cm = cutoff_minute if cutoff_minute is not None else settings.cutoff_minute
-
-    aligned = _load_aligned_pairs(from_date, to_date, ch, cm)
+    
+    # Try to get cached aligned pairs or compute if not cached
+    cache_key = f"by_hour_{from_date}_{to_date}_{ch}_{cm}"
+    aligned = get_precomputed_metrics(cache_key)
+    
+    if aligned is None:
+        snapshot = get_snapshot()
+        
+        all_days = pd.date_range(from_date, to_date, freq="D")
+        all_aligned = []
+        
+        for day in all_days:
+            fcst = select_decision_forecast(
+                snapshot.windfor, day, cutoff_hour=ch, cutoff_minute=cm
+            )
+            if not fcst.empty:
+                aligned = join_forecast_actual(fcst, snapshot.fuelhh)
+                all_aligned.append(aligned)
+        
+        if not all_aligned:
+            raise HTTPException(status_code=404, detail="No data for date range")
+        
+        aligned = pd.concat(all_aligned, ignore_index=True)
+        update_computed_metrics_cache(cache_key, aligned)
+    
     if aligned.empty:
         raise HTTPException(status_code=404, detail="No data for date range")
-
+    
     results = compute_by_hour(aligned)
     results_list = results.to_dict("records")
-
+    
     return AccuracyByHourResponse(
         from_date=pd.Timestamp(from_date).date(),
         to_date=pd.Timestamp(to_date).date(),
@@ -174,33 +236,58 @@ async def get_accuracy_by_wind_level(
     Tercile boundaries are computed from the full snapshot for stability.
     """
     _validate_range(from_date, to_date)
-
-    snapshot_path = settings.snapshot_path
-    snapshot = load_snapshot(snapshot_path)
-
-    # Stable tercile boundaries from full snapshot
-    tercile_lower, tercile_upper = compute_wind_level_terciles(snapshot.windfor)
-
+    
+    snapshot = get_snapshot()
+    
+    # Stable tercile boundaries from full snapshot (cached in main.py)
+    cache_key = "tercile_bounds"
+    tercile_bounds = get_precomputed_metrics(cache_key)
+    if tercile_bounds is None:
+        tercile_lower, tercile_upper = compute_wind_level_terciles(snapshot.windfor)
+        tercile_bounds = (tercile_lower, tercile_upper)
+        update_computed_metrics_cache(cache_key, tercile_bounds)
+    
     ch = cutoff_hour if cutoff_hour is not None else settings.cutoff_hour
     cm = cutoff_minute if cutoff_minute is not None else settings.cutoff_minute
-
-    aligned = _load_aligned_pairs(from_date, to_date, ch, cm)
+    
+    # Try to get cached aligned pairs or compute if not cached
+    cache_key = f"by_wind_level_{from_date}_{to_date}_{ch}_{cm}"
+    aligned = get_precomputed_metrics(cache_key)
+    
+    if aligned is None:
+        all_days = pd.date_range(from_date, to_date, freq="D")
+        all_aligned = []
+        
+        for day in all_days:
+            fcst = select_decision_forecast(
+                snapshot.windfor, day, cutoff_hour=ch, cutoff_minute=cm
+            )
+            if not fcst.empty:
+                aligned = join_forecast_actual(fcst, snapshot.fuelhh)
+                all_aligned.append(aligned)
+        
+        if not all_aligned:
+            raise HTTPException(status_code=404, detail="No data for date range")
+        
+        aligned = pd.concat(all_aligned, ignore_index=True)
+        update_computed_metrics_cache(cache_key, aligned)
+    
     if aligned.empty:
         raise HTTPException(status_code=404, detail="No data for date range")
-
+    
     results = compute_by_wind_level(
-        aligned, tercile_bounds=(tercile_lower, tercile_upper), by_forecast=True
+        aligned, tercile_bounds=tercile_bounds, by_forecast=True
     )
     results_list = results.to_dict("records")
-
+    
     return AccuracyByWindLevelResponse(
         from_date=pd.Timestamp(from_date).date(),
         to_date=pd.Timestamp(to_date).date(),
         cutoff_hour=ch,
         cutoff_minute=cm,
         results=results_list,
-        tercile_lower=tercile_lower,
-        tercile_upper=tercile_upper,
+        tercile_lower=tercile_bounds[0],
+        tercile_upper=tercile_bounds[1],
     )
 
 
@@ -213,17 +300,40 @@ async def get_accuracy_daily(
 ):
     """Get daily MAE/bias time series."""
     _validate_range(from_date, to_date)
-
+    
     ch = cutoff_hour if cutoff_hour is not None else settings.cutoff_hour
     cm = cutoff_minute if cutoff_minute is not None else settings.cutoff_minute
-
-    aligned = _load_aligned_pairs(from_date, to_date, ch, cm)
+    
+    # Try to get cached aligned pairs or compute if not cached
+    cache_key = f"daily_{from_date}_{to_date}_{ch}_{cm}"
+    aligned = get_precomputed_metrics(cache_key)
+    
+    if aligned is None:
+        snapshot = get_snapshot()
+        
+        all_days = pd.date_range(from_date, to_date, freq="D")
+        all_aligned = []
+        
+        for day in all_days:
+            fcst = select_decision_forecast(
+                snapshot.windfor, day, cutoff_hour=ch, cutoff_minute=cm
+            )
+            if not fcst.empty:
+                aligned = join_forecast_actual(fcst, snapshot.fuelhh)
+                all_aligned.append(aligned)
+        
+        if not all_aligned:
+            raise HTTPException(status_code=404, detail="No data for date range")
+        
+        aligned = pd.concat(all_aligned, ignore_index=True)
+        update_computed_metrics_cache(cache_key, aligned)
+    
     if aligned.empty:
         raise HTTPException(status_code=404, detail="No data for date range")
-
+    
     results = compute_daily(aligned)
     results_list = results.to_dict("records")
-
+    
     return AccuracyDailyResponse(
         from_date=pd.Timestamp(from_date).date(),
         to_date=pd.Timestamp(to_date).date(),
@@ -243,16 +353,39 @@ async def get_accuracy_error_distribution(
 ):
     """Get error distribution histogram and quantiles."""
     _validate_range(from_date, to_date)
-
+    
     ch = cutoff_hour if cutoff_hour is not None else settings.cutoff_hour
     cm = cutoff_minute if cutoff_minute is not None else settings.cutoff_minute
-
-    aligned = _load_aligned_pairs(from_date, to_date, ch, cm)
+    
+    # Try to get cached aligned pairs or compute if not cached
+    cache_key = f"error_distribution_{from_date}_{to_date}_{ch}_{cm}_{bin_width}"
+    aligned = get_precomputed_metrics(cache_key)
+    
+    if aligned is None:
+        snapshot = get_snapshot()
+        
+        all_days = pd.date_range(from_date, to_date, freq="D")
+        all_aligned = []
+        
+        for day in all_days:
+            fcst = select_decision_forecast(
+                snapshot.windfor, day, cutoff_hour=ch, cutoff_minute=cm
+            )
+            if not fcst.empty:
+                aligned = join_forecast_actual(fcst, snapshot.fuelhh)
+                all_aligned.append(aligned)
+        
+        if not all_aligned:
+            raise HTTPException(status_code=404, detail="No data for date range")
+        
+        aligned = pd.concat(all_aligned, ignore_index=True)
+        update_computed_metrics_cache(cache_key, aligned)
+    
     if aligned.empty:
         raise HTTPException(status_code=404, detail="No data for date range")
-
+    
     dist = compute_error_distribution(aligned, bin_width=bin_width)
-
+    
     return AccuracyErrorDistributionResponse(
         from_date=pd.Timestamp(from_date).date(),
         to_date=pd.Timestamp(to_date).date(),

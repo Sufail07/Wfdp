@@ -237,7 +237,21 @@ export function LineChart({
       ...baseOption({ bottom: 45, xLabelRotate: -45, ruleColor, inkColor, inkMutedColor, paperColor }),
       xAxis: {
         ...baseOption({}).xAxis,
-        data: data.map((d) => String(d.x)),
+        type: 'value',
+        min: bins[0],
+        max: bins[bins.length - 1],
+        name: 'Signed error (MW)',
+        nameLocation: 'center',
+        nameGap: 35,
+        axisLabel: {
+          fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+          fontSize: 9,
+          color: inkMutedColor,
+          formatter: (v: number) => `${Math.round(v)}`,
+        },
+        splitLine: { show: false },
+        axisLine: { lineStyle: { color: ruleColor } },
+        axisTick: { show: true, length: 3 },
       },
       series: [
         {
@@ -399,13 +413,12 @@ export function HistogramChart({
         {
           type: 'bar',
           name: 'Count',
-          data: barData.map((d) => ({
-            x: d.x,
-            y: d.y,
-            binStart: d.binStart,
-            binEnd: d.binEnd,
-            itemStyle: { color: d.color, opacity: 1 },
-          })),
+          data: barData.map((d) => (
+            {
+              value: [d.x, d.y],
+              itemStyle: { color: d.color, opacity: 1 },
+            }
+          )),
           color: overColor,
           barWidth: Math.max(4, Math.min(30, bin_width / 2)),
           barMaxWidth: 40,

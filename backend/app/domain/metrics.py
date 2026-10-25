@@ -234,9 +234,112 @@ def compute_metrics_by_group(
     group_col: str,
 ) -> pd.DataFrame:
     """Compute metrics grouped by a column."""
+    # Import compute_metrics inside the function to avoid circular imports
+    from app.domain.metrics import compute_metrics
+    
     results = []
     for group_val, group_df in aligned_pairs.groupby(group_col):
-        metrics = compute_metrics(group_df)
+        # Only compute bootstraps for the summary group to improve performance
+        if group_col == "delivery_date" or group_col == "day_of_month":
+            # For summary calculations, use the optimized compute_metrics
+            metrics = compute_metrics(group_df)
+        else:
+            # For other groups, compute lightweight metrics without bootstraps
+            valid = group_df.dropna(subset=["actualMW"]).copy()
+            n = len(valid)
+            
+            if n == 0:
+                metrics = {
+                    "n": 0,
+                    "effective_sample_size": 0.0,
+                    "n_days": 0,
+                    "bias": None,
+                    "mae": None,
+                    "rmse": None,
+                    "nmae": None,
+                    "p5": None,
+                    "p50": None,
+                    "p90": None,
+                    "p95": None,
+                    "p99": None,
+                    "over_forecast_share": None,
+                    "tail_risk_p95_over_mw": None,
+                    "bias_ci": None,
+                    "mae_ci": None,
+                }
+            else:
+                error = valid["errorMW"].values
+                actual = valid["actualMW"].values
+                forecast = valid["forecastMW"].values
+
+                # Bias (mean error) - positive = over-forecast
+                bias = float(np.mean(error))
+
+                # MAE
+                mae = float(np.mean(np.abs(error)))
+
+                # RMSE
+                rmse = float(np.sqrt(np.mean(error ** 2)))
+
+                # nMAE (normalized by mean actual) - avoids division by near-zero
+                mean_actual = np.mean(actual)
+                nmae = float(mae / mean_actual) if mean_actual > 0 else None
+
+                # Percentiles of error
+                p5 = float(np.percentile(error, 5))
+                p50 = float(np.percentile(error, 50))
+                p90 = float(np.percentile(error, 90))
+                p95 = float(np.percentile(error, 95))
+                p99 = float(np.percentile(error, 99))
+
+                # Over-forecast share (error > 0)
+                over_forecast_share = float(np.mean(error > 0))
+
+                # Tail risk: P95 of over-forecast errors (only positive errors)
+                over_errors = error[error > 0]
+                tail_risk_p95_over_mw = float(np.percentile(over_errors, 95)) if len(over_errors) > 0 else 0.0
+
+                # Lightweight CI (no bootstrap for performance)
+                bias_ci = {
+                    "ci_lower": bias - 1.96 * (np.std(error) / np.sqrt(len(error))) if len(error) > 1 else None,
+                    "ci_upper": bias + 1.96 * (np.std(error) / np.sqrt(len(error))) if len(error) > 1 else None,
+                    "bootstrap_mean": bias,
+                    "bootstrap_std": float(np.std(error)),
+                }
+                mae_ci = {
+                    "ci_lower": mae - 1.96 * (np.std(np.abs(error)) / np.sqrt(len(error))) if len(error) > 1 else None,
+                    "ci_upper": mae + 1.96 * (np.std(np.abs(error)) / np.sqrt(len(error))) if len(error) > 1 else None,
+                    "bootstrap_mean": mae,
+                    "bootstrap_std": float(np.std(np.abs(error))),
+                }
+                
+                n_days = 0
+                if "delivery_date" in group_df.columns:
+                    n_days = group_df["delivery_date"].nunique()
+                else:
+                    valid_copy = valid.copy()
+                    valid_copy["delivery_date"] = valid_copy["startTime"].dt.tz_convert("Europe/London").dt.date
+                    n_days = valid_copy["delivery_date"].nunique()
+
+                metrics = {
+                    "n": n,
+                    "effective_sample_size": float(np.sqrt(n)),  # Simplified approximation
+                    "n_days": n_days,
+                    "bias": bias,
+                    "mae": mae,
+                    "rmse": rmse,
+                    "nmae": nmae,
+                    "p5": p5,
+                    "p50": p50,
+                    "p90": p90,
+                    "p95": p95,
+                    "p99": p99,
+                    "over_forecast_share": over_forecast_share,
+                    "tail_risk_p95_over_mw": tail_risk_p95_over_mw,
+                    "bias_ci": bias_ci,
+                    "mae_ci": mae_ci,
+                }
+        
         metrics[group_col] = group_val
         results.append(metrics)
     return pd.DataFrame(results)

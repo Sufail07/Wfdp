@@ -9,6 +9,7 @@ from app.api.schemas import (
 )
 from app.config import settings
 from app.domain.risk import compute_risk_band
+from app.main import get_snapshot
 
 router = APIRouter()
 
@@ -26,10 +27,8 @@ async def get_risk_band(
     except Exception:
         raise HTTPException(status_code=422, detail="Invalid delivery_date format")
 
-    from app.config import settings as cfg
-    from app.data.loader import load_snapshot
-
-    snapshot = load_snapshot(cfg.snapshot_path)
+    # Use cached snapshot instead of loading per request
+    snapshot = get_snapshot()
 
     result = compute_risk_band(
         snapshot.windfor,

@@ -1,6 +1,6 @@
 {
   "fetch_time": "2026-10-24T16:03:18.542377+00:00",
-  "dataset_version": "elexon-bmrs-2026-01",
+  "dataset_version": "elexon-bmrs-2026-01-synthetic",
   "row_counts": {
     "fuelhh": 1488,
     "windfor": 10416

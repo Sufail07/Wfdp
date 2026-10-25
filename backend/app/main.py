@@ -1,21 +1,31 @@
 """FastAPI app factory with security headers, structured logging, and lazy snapshot cache."""
 
-import logging
-import sys
-import uuid
-from contextlib import asynccontextmanager
+import pandas as pd
 
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-
-from app.config import settings
+from app.domain.metrics import compute_metrics
+from app.domain.slices import (
+    compute_by_horizon_all_vintages,
+    compute_by_hour,
+    compute_by_wind_level,
+    compute_daily,
+    compute_error_distribution,
+    compute_wind_level_terciles,
+)
+from app.domain.risk import compute_risk_band
+from app.domain.asof import select_decision_forecast
 from app.data.loader import SnapshotData, load_snapshot
 from app.repository.interface import PandasForecastRepository
+from app.config import settings
 
 # Module-level lazy cache (one per serverless instance)
 _snapshot_data: SnapshotData | None = None
 _repository: PandasForecastRepository | None = None
+
+# Precomputed metrics cache
+_computed_metrics_cache: dict[str, Any] = {}
+
+# Precomputed metrics cache
+_computed_metrics_cache: dict[str, Any] = {}
 
 
 class StructuredLogFilter:
@@ -54,16 +64,63 @@ logger.propagate = False
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _snapshot_data, _repository
+    global _snapshot_data, _repository, _computed_metrics_cache
+    
     _snapshot_data = load_snapshot(settings.snapshot_path)
     _repository = PandasForecastRepository(_snapshot_data.windfor, _snapshot_data.fuelhh)
+    
     logger.info(
         "snapshot_loaded",
         extra={"request_id": "system"},
     )
+    
+    # Precompute accuracy metrics at startup
+    from datetime import date
+    from app.domain.errors import join_forecast_actual
+    from app.domain.slices import (
+        compute_by_hour, compute_by_wind_level, compute_daily, compute_error_distribution
+    )
+    
+    aligned = join_forecast_actual(
+        select_decision_forecast(
+            _snapshot_data.windfor,
+            pd.Timestamp(date(2026, 1, 2)),
+            cutoff_hour=settings.cutoff_hour,
+            cutoff_minute=settings.cutoff_minute,
+            availability_lag_minutes=settings.availability_lag_minutes,
+        ),
+        _snapshot_data.fuelhh
+    )
+    
+    if not aligned.empty:
+        # Precompute summary metrics
+        _computed_metrics_cache["summary"] = compute_metrics(aligned)
+        
+        # Precompute by-horizon metrics
+        _computed_metrics_cache["by_horizon"] = compute_by_horizon_all_vintages(
+            _snapshot_data.windfor, _snapshot_data.fuelhh, "2026-01-02", "2026-02-01"
+        )
+        
+        # Precompute by-hour metrics for default range
+        _computed_metrics_cache["by_hour"] = compute_by_hour(aligned)
+        
+        # Precompute by-wind-level metrics
+        tercile_lower, tercile_upper = compute_wind_level_terciles(_snapshot_data.windfor)
+        _computed_metrics_cache["by_wind_level"] = compute_by_wind_level(
+            aligned, tercile_bounds=(tercile_lower, tercile_upper), by_forecast=True
+        )
+        
+        # Precompute daily metrics
+        _computed_metrics_cache["daily"] = compute_daily(aligned)
+        
+        # Precompute error distribution
+        _computed_metrics_cache["error_distribution"] = compute_error_distribution(aligned)
+    
     yield
+    
     _snapshot_data = None
     _repository = None
+    _computed_metrics_cache = {}
 
 
 def get_snapshot() -> SnapshotData:
@@ -78,7 +135,23 @@ def get_repository() -> PandasForecastRepository:
     return _repository
 
 
+def get_precomputed_metrics(cache_key: str) -> Any:
+    """Get precomputed metrics from cache."""
+    return _computed_metrics_cache.get(cache_key)
+
+
+def update_computed_metrics_cache(cache_key: str, value: Any) -> None:
+    """Update computed metrics cache."""
+    _computed_metrics_cache[cache_key] = value
+
+
 def create_app() -> FastAPI:
+    app = FastAPI(
+        title="Wind Forecast Decision Portal API",
+        description="API for UK utility wind forecast decision-making",
+        version="0.1.0",
+        lifespan=lifespan,
+    )
     app = FastAPI(
         title="Wind Forecast Decision Portal API",
         description="API for UK utility wind forecast decision-making",
