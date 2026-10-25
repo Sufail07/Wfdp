@@ -1,94 +1,113 @@
 import * as echarts from 'echarts'
 
-// Direction F - Publication Moment: ECharts theme registered once from locked palette
-// 2-color: moment (ink) + context (muted), serif display + mono data
-const PALETTE = ['#0f172a', '#64748b', '#94a3b8', '#334155', '#475569']
+// §6 ECharts theme — thin lines, minimal grid, no legends when direct labels fit, mono axis labels
+// One source of truth for chart styling; no per-chart overrides.
 
-const baseTheme = {
-  color: PALETTE,
+const lightTheme = {
+  color: ['#1F6F8B', '#C4452D', '#2D6A9F', '#6B6F76', '#9A9EA5'],
+  backgroundColor: 'transparent',
   textStyle: {
-    fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
-    color: '#0f172a',
-    fontSize: 12,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+    fontSize: 11,
+    color: '#6B6F76',
   },
   title: {
     textStyle: {
-      fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+      fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif',
       fontSize: 14,
-      fontWeight: 600,
-      color: '#0f172a',
+      fontWeight: 400,
+      color: '#15171A',
     },
   },
   tooltip: {
+    trigger: 'axis',
+    axisPointer: { type: 'line' },
     textStyle: {
       fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
-      fontSize: 12,
+      fontSize: 11,
     },
   },
-  axisLabel: {
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
-    fontSize: 11,
-    color: '#64748b',
+  grid: {
+    left: '6%',
+    right: '6%',
+    top: 30,
+    bottom: 30,
+    containLabel: true,
   },
-  axisLine: {
-    lineStyle: {
-      color: '#e2e8f0',
+  xAxis: {
+    type: 'category',
+    axisLine: { lineStyle: { color: '#D9D5CB' } },
+    axisTick: { show: false },
+    axisLabel: {
+      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+      fontSize: 10,
+      color: '#6B6F76',
+    },
+    splitLine: { show: false },
+  },
+  yAxis: {
+    type: 'value',
+    axisLine: { show: false },
+    axisTick: { show: false },
+    axisLabel: {
+      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+      fontSize: 10,
+      color: '#6B6F76',
+    },
+    splitLine: {
+      show: true,
+      lineStyle: { color: '#D9D5CB', type: 'dashed', width: 0.5 },
     },
   },
-  splitLine: {
-    lineStyle: {
-      color: '#f1f5f9',
-      type: 'dashed',
+  series: {
+    line: {
+      symbol: 'none',
+      lineStyle: { width: 1.5 },
+      itemStyle: { borderWidth: 0 },
+      smooth: true,
+    },
+    bar: {
+      barWidth: '40%',
+      itemStyle: { borderRadius: [2, 2, 0, 0] },
     },
   },
   legend: {
-    textStyle: {
-      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
-      fontSize: 12,
-      color: '#64748b',
-    },
+    show: false,
   },
 }
 
 const darkTheme = {
-  ...baseTheme,
+  ...lightTheme,
+  color: ['#5FB3CE', '#E5775F', '#6FA6D6', '#9A9EA5', '#64748b'],
   textStyle: {
-    ...baseTheme.textStyle,
-    color: '#f8fafc',
+    ...lightTheme.textStyle,
+    color: '#9A9EA5',
   },
   title: {
-    ...baseTheme.title,
+    ...lightTheme.title,
     textStyle: {
-      ...baseTheme.title.textStyle,
-      color: '#f8fafc',
+      ...lightTheme.title.textStyle,
+      color: '#ECE9E2',
     },
   },
   axisLabel: {
-    ...baseTheme.axisLabel,
-    color: '#94a3b8',
+    color: '#9A9EA5',
   },
-  axisLine: {
-    lineStyle: {
-      color: '#1e293b',
-    },
+  xAxis: {
+    ...lightTheme.xAxis,
+    axisLine: { lineStyle: { color: '#2A2C30' } },
   },
-  splitLine: {
-    lineStyle: {
-      color: '#0f172a',
-      type: 'dashed',
-    },
-  },
-  legend: {
-    ...baseTheme.legend,
-    textStyle: {
-      ...baseTheme.legend.textStyle,
-      color: '#94a3b8',
+  yAxis: {
+    ...lightTheme.yAxis,
+    splitLine: {
+      show: true,
+      lineStyle: { color: '#2A2C30', type: 'dashed', width: 0.5 },
     },
   },
 }
 
 // Register once at module load
-echarts.registerTheme('publication', baseTheme)
+echarts.registerTheme('publication', lightTheme)
 echarts.registerTheme('publication-dark', darkTheme)
 
 export function getEChartsTheme(isDark: boolean): string {

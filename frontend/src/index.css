@@ -3,35 +3,36 @@
 @tailwind utilities;
 
 :root {
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  /* §3.2 Design tokens — light */
+  --paper: #F6F4EF;
+  --ink: #15171A;
+  --ink-muted: #6B6F76;
+  --rule: #D9D5CB;
+  --accent: #1F6F8B;
+  --over: #C4452D;
+  --under: #2D6A9F;
+
+  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  --color-moment: #0f172a;
-  --color-context: #64748b;
-  --color-context-light: #94a3b8;
-  --color-bg: #ffffff;
-  --color-surface: #f8fafc;
-  --color-border: #e2e8f0;
-  --color-border-hover: #cbd5e1;
-
-  --radius: 8px;
-  --header-height: 4rem;
+  --radius: 2px;
 }
 
 [data-theme="dark"], .dark {
-  --color-moment: #f8fafc;
-  --color-context: #94a3b8;
-  --color-context-light: #64748b;
-  --color-bg: #020617;
-  --color-surface: #0f172a;
-  --color-border: #1e293b;
-  --color-border-hover: #334155;
+  /* §3.2 Design tokens — dark */
+  --paper: #121315;
+  --ink: #ECE9E2;
+  --ink-muted: #9A9EA5;
+  --rule: #2A2C30;
+  --accent: #5FB3CE;
+  --over: #E5775F;
+  --under: #6FA6D6;
 }
 
 html {
   font-family: var(--font-sans);
-  line-height: 1.6;
+  line-height: 1.5;
   font-weight: 400;
   color-scheme: light dark;
   font-synthesis: none;
@@ -44,8 +45,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: var(--color-bg);
-  color: var(--color-moment);
+  background: var(--paper);
+  color: var(--ink);
 }
 
 #root {
@@ -58,104 +59,108 @@ body {
 .font-mono { font-family: var(--font-mono); }
 .font-sans { font-family: var(--font-sans); }
 
-.text-moment { color: var(--color-moment); }
-.text-context { color: var(--color-context); }
-.text-context-light { color: var(--color-context-light); }
+.text-ink { color: var(--ink); }
+.text-ink-muted { color: var(--ink-muted); }
+.text-accent { color: var(--accent); }
+.text-over { color: var(--over); }
+.text-under { color: var(--under); }
 
-.bg-moment { background-color: var(--color-moment); }
-.bg-context { background-color: var(--color-context); }
-.bg-bg { background-color: var(--color-bg); }
-.bg-surface { background-color: var(--color-surface); }
+.bg-paper { background-color: var(--paper); }
+.bg-ink { background-color: var(--ink); }
 
-.border-color { border-color: var(--color-border); }
+.border-rule { border-color: var(--rule); }
 
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* §3.4 Layout: 8px base spacing, no shadows, hairline rules, 0-4px radius */
 @layer components {
+  .shell {
+    @apply flex flex-col min-h-screen;
+  }
+  .shell-header {
+    @apply border-b border-rule bg-paper sticky top-0 z-50;
+  }
+  .shell-main {
+    @apply flex-1 w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+  .shell-footer {
+    @apply border-t border-rule py-6;
+  }
+
+  .hairline {
+    @apply border border-rule rounded-[var(--radius)] bg-paper;
+  }
+
+  .kpi-numeral {
+    @apply hairline p-4;
+  }
+  .kpi-number {
+    @apply font-mono text-ink text-[39px] font-normal tabular-nums leading-none;
+  }
+  .kpi-unit {
+    @apply font-mono text-ink-muted text-xs ml-1;
+  }
+  .kpi-label {
+    @apply font-sans text-ink-muted text-xs uppercase tracking-wider mt-1;
+  }
+  .kpi-sparkline {
+    @apply mt-3 h-8 w-full;
+  }
+
+  .as-of-statement {
+    @apply font-serif text-ink text-[25px] font-normal leading-tight mb-2 tracking-tight;
+  }
+  .as-of-meta {
+    @apply font-mono text-ink-muted text-sm mt-1;
+  }
+
+  .cutoff-rule {
+    @apply w-px bg-accent;
+  }
+
+  .time-chart {
+    @apply hairline;
+  }
+
+  .sparkline {
+    @apply h-6 w-full;
+  }
+
+  .section-heading {
+    @apply font-serif text-ink text-[20px] font-normal mb-4 tracking-tight;
+  }
+
   .btn {
-    @apply px-4 py-2 rounded font-medium text-moment transition-all focus:outline-none focus:ring-2 focus:ring-offset-2;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-moment);
+    @apply px-3 py-1.5 rounded-[var(--radius)] border border-rule bg-paper text-ink font-sans text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-accent;
   }
   .btn:hover {
-    background: var(--color-border-hover);
-    border-color: var(--color-border-hover);
-  }
-  .dark .btn:hover {
-    background: var(--color-border-hover);
-    border-color: var(--color-border-hover);
+    background: var(--rule);
   }
   .btn-primary {
-    @apply btn text-moment font-semibold;
-    border-color: var(--color-moment);
-    background: var(--color-moment);
-    color: #ffffff;
+    @apply btn bg-accent text-white border-accent;
   }
   .btn-primary:hover {
     opacity: 0.9;
   }
-  .btn-secondary {
-    @apply btn text-context font-medium;
-    border-color: var(--color-border);
-    background: transparent;
-    color: var(--color-context);
-  }
-  .btn-secondary:hover {
-    background: var(--color-surface);
-    color: var(--color-moment);
-  }
+
   .input {
-    @apply w-full px-3 py-2 rounded font-mono text-moment transition-all focus:outline-none focus:ring-2;
-    border: 1px solid var(--color-border);
-    background: var(--color-bg);
-    color: var(--color-moment);
-  }
-  .input:focus {
-    border-color: var(--color-moment);
-    ring-color: var(--color-moment);
+    @apply w-full px-3 py-1.5 rounded-[var(--radius)] border border-rule bg-paper text-ink font-mono text-sm tabular-nums transition-colors focus:outline-none focus:ring-1 focus:ring-accent;
   }
   .input::placeholder {
-    color: var(--color-context-light);
+    color: var(--ink-muted);
   }
-  .dark .input {
-    background: var(--color-surface);
-    color: var(--color-moment);
-    border-color: var(--color-border);
-  }
+
   .label {
-    @apply block text-xs font-mono font-semibold text-context mb-1.5 uppercase tracking-wider;
+    @apply block font-sans text-ink-muted text-xs uppercase tracking-wider mb-1.5;
   }
-  .card {
-    @apply p-6 rounded-lg border border-color;
-    background: var(--color-surface);
+
+  .skeleton {
+    @apply animate-pulse rounded-[var(--radius)] bg-rule h-8 w-full;
   }
-  .card:hover {
-    border-color: var(--color-border-hover);
+  .skeleton-text {
+    @apply animate-pulse rounded-[var(--radius)] bg-rule h-4 w-full mb-2;
   }
-  .kpi-card {
-    @apply card flex flex-col items-start p-5;
-  }
-  .kpi-value {
-    @apply text-moment font-serif text-2xl font-bold leading-none;
-  }
-  .kpi-label {
-    @apply text-xs font-mono font-semibold text-context uppercase tracking-wider mt-0.5;
-  }
-  .kpi-unit {
-    @apply text-context-light text-xs font-mono ml-1;
-  }
-  .page-title {
-    @apply font-serif text-moment text-2xl font-bold tracking-tight mb-2;
-  }
-  .page-subtitle {
-    @apply font-mono text-context text-sm mt-0.5;
-  }
-  .section-title {
-    @apply font-serif font-semibold text-moment text-lg mb-4;
-  }
-  .meta-text {
-    @apply font-mono text-context text-sm;
-  }
-  .data-text {
-    @apply font-mono text-moment text-sm tabular-nums;
+  .skeleton-text.w-3-4 {
+    width: 75%;
   }
 }
