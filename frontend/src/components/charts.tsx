@@ -160,6 +160,17 @@ export function BarChart({
       },
     ]
 
+    // Round MAE values in tooltips to whole numbers
+    base.tooltip = {
+      ...base.tooltip,
+      formatter: (params: any) => {
+        const p = params[0] || params
+        const val = p.value != null ? p.value : p.data?.y
+        if (val == null) return ''
+        return `${p.name}: ${Math.round(val)} MW`
+      },
+    }
+
     if (series2 && series2.length > 0) {
       series.push({
         type: 'line',

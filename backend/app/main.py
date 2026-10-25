@@ -137,11 +137,11 @@ def create_app() -> FastAPI:
 
     from app.api import accuracy, decision_forecast, forecast_revisions, meta, risk_band
 
-    app.include_router(meta.router, prefix="/meta", tags=["meta"])
-    app.include_router(decision_forecast.router, prefix="/decision-forecast", tags=["decision-forecast"])
-    app.include_router(forecast_revisions.router, prefix="/forecast-revisions", tags=["forecast-revisions"])
-    app.include_router(accuracy.router, prefix="/accuracy", tags=["accuracy"])
-    app.include_router(risk_band.router, prefix="/risk-band", tags=["risk-band"])
+    app.include_router(meta.router, prefix="/api/meta", tags=["meta"])
+    app.include_router(decision_forecast.router, prefix="/api/decision-forecast", tags=["decision-forecast"])
+    app.include_router(forecast_revisions.router, prefix="/api/forecast-revisions", tags=["forecast-revisions"])
+    app.include_router(accuracy.router, prefix="/api/accuracy", tags=["accuracy"])
+    app.include_router(risk_band.router, prefix="/api/risk-band", tags=["risk-band"])
 
     @app.get("/health")
     async def health():

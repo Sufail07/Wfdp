@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd frontend && npm run build",
+  "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "framework": "vite",
   "rewrites": [
@@ -17,9 +17,6 @@
       "maxDuration": 30
     }
   },
-  "includeFiles": [
-    "backend/data/snapshot/**"
-  ],
   "headers": [
     {
       "source": "/(.*)",

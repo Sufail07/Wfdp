@@ -6,7 +6,7 @@
 let cache: Record<string, string> | null = null
 
 function getRootStyle(): CSSStyleDeclaration {
-  return document.documentElement.style || getComputedStyle(document.documentElement)
+  return getComputedStyle(document.documentElement)
 }
 
 export function resolveColor(token: string): string {

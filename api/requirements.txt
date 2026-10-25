@@ -1,0 +1,6 @@
+fastapi
+pandas
+pyarrow
+pydantic
+pydantic-settings
+python-multipart
