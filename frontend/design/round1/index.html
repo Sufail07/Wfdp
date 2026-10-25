@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Round 1 &mdash; Typography Directions A&ndash;J</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+    line-height: 1.5;
+    padding: 48px;
+  }
+  h1 { font-size: 2.25rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 1rem; }
+  h2 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; margin: 2rem 0 0.75rem; border-bottom: 1px solid #e5e5e5; padding-bottom: 0.5rem; }
+  p { margin-bottom: 1rem; color: #4a4a4a; font-size: 1rem; }
+  a { color: #0ea5e9; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .intro { max-width: 60ch; margin-bottom: 3rem; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+    max-width: 1200px;
+  }
+  .card {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 24px;
+    background: #fafafa;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: #0ea5e9; }
+  .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a; }
+  .card p { font-size: 0.875rem; color: #666; margin-bottom: 0.75rem; }
+  .card .premise { font-size: 0.8125rem; font-style: italic; color: #888; }
+  .constraints { margin-top: 3rem; max-width: 60ch; font-size: 0.9rem; color: #666; }
+  .constraints ul { margin-left: 1.25rem; margin-top: 0.5rem; }
+  .constraints li { margin-bottom: 0.35rem; }
+</style>
+</head>
+<body>
+  <h1>Round 1 &mdash; Typography Directions A&ndash;J</h1>
+  <p class="intro">Ten independent typography-led design directions for the Wind Forecast Decision Portal. Each direction uses only type, flat background color, text color, and whitespace&mdash;no borders, shapes, icons, images, gradients, shadows, or SVG. Open each direction to evaluate, then lock one for Round 2 production implementation.</p>
+  <div class="grid">
+    <a href="A.html" class="card">
+      <h3>Direction A &mdash; Cutoff Line</h3>
+      <p>Hard temporal boundary as vertical rule.</p>
+      <p class="premise">Monospace (data) + Sans (ui) &bull; 2-color</p>
+    </a>
+    <a href="B.html" class="card">
+      <h3>Direction B &mdash; Vintage Stack</h3>
+      <p>Forecast revisions as typographic depth.</p>
+      <p class="premise">Variable weight axis &bull; 3-color</p>
+    </a>
+    <a href="C.html" class="card">
+      <h3>Direction C &mdash; Half-Hour Grid</h3>
+      <p>48-period rhythm as baseline grid.</p>
+      <p class="premise">Tabular numerals, tight leading &bull; 1-color</p>
+    </a>
+    <a href="D.html" class="card">
+      <h3>Direction D &mdash; Meridian Anchor</h3>
+      <p>Greenwich vertical as reading spine.</p>
+      <p class="premise">Serif display + mono data &bull; 2-color</p>
+    </a>
+    <a href="E.html" class="card">
+      <h3>Direction E &mdash; Risk Polarity</h3>
+      <p>Over/under forecast as warm/cool text.</p>
+      <p class="premise">Single variable font, weight/width axes &bull; 4-color</p>
+    </a>
+    <a href="F.html" class="card">
+      <h3>Direction F &mdash; Publication Moment</h3>
+      <p>"As of" timestamp as dominant mark.</p>
+      <p class="premise">Display serif + mono &bull; 2-color</p>
+    </a>
+    <a href="G.html" class="card">
+      <h3>Direction G &mdash; Buyer's Shortfall</h3>
+      <p>Shortfall risk as visual weight.</p>
+      <p class="premise">Condensed sans, tight tracking &bull; 3-color</p>
+    </a>
+    <a href="H.html" class="card">
+      <h3>Direction H &mdash; Forecast Horizon</h3>
+      <p>Distance from cutoff as fade/scale.</p>
+      <p class="premise">Single font, size/opacity gradient &bull; 2-color</p>
+    </a>
+    <a href="I.html" class="card">
+      <h3>Direction I &mdash; Actual vs Forecast</h3>
+      <p>Two voices, one timeline.</p>
+      <p class="premise">Paired serif/sans dialogue &bull; 3-color</p>
+    </a>
+    <a href="J.html" class="card">
+      <h3>Direction J &mdash; Decision Window</h3>
+      <p>Narrow actionable moment.</p>
+      <p class="premise">Wide sans, generous whitespace &bull; 1-color</p>
+    </a>
+  </div>
+  <div class="constraints">
+    <h2>Constraints (all directions)</h2>
+    <ul>
+      <li>System fonts only &mdash; no Google Fonts, no external CDN (isolation protocol)</li>
+      <li>No new dependencies &mdash; existing Tailwind + ECharts stack only</li>
+      <li>Dark mode considered palette, not inversion</li>
+      <li>London timezone &mdash; D-1 09:00 cutoff, half-hourly periods</li>
+      <li>Self-host WOFF2 in <code>public/fonts/</code> if a specific font is locked</li>
+    </ul>
+  </div>
+  <p style="margin-top: 3rem; font-size: 0.875rem; color: #888;">Next: open each direction, identify alive/false, then lock one for Round 2.</p>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Style Guide &mdash; Wind Forecast Decision Portal (Direction F)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #ffffff;
+    color: #111827;
+    line-height: 1.6;
+    padding: 48px 64px;
+  }
+  .font-serif { font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; }
+  .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+  .text-moment { color: #111827; }
+  .text-context { color: #6b7280; }
+  .text-context-light { color: #9ca3af; }
+  .bg-surface { background: #f8fafc; }
+  .border-color { border-color: #e2e8f0; }
+  h1 { font-family: var(--font-serif, ui-serif); font-size: 2.75rem; font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; color: #111827; margin-bottom: 16px; }
+  h2 { font-family: var(--font-serif, ui-serif); font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; color: #111827; margin: 2.5rem 0 0.75rem; border-bottom: 2px solid #111827; padding-bottom: 0.5rem; }
+  h3 { font-family: var(--font-serif, ui-serif); font-size: 1.125rem; font-weight: 600; color: #111827; margin: 1.5rem 0 0.5rem; }
+  p { margin-bottom: 1rem; color: #111827; }
+  .font-mono p, .font-mono li { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 0.875rem; }
+  a { color: #111827; text-decoration: underline; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 0.875rem; background: #f8fafc; padding: 2px 6px; border-radius: 4px; }
+  pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 0.8125rem; background: #f8fafc; padding: 16px; border-radius: 8px; overflow-x: auto; margin: 1rem 0; border: 1px solid #e2e8f0; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 0.875rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
+  th { font-weight: 600; color: #111827; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin: 1.5rem 0; }
+  .swatch { display: inline-block; width: 20px; height: 20px; border-radius: 4px; margin-right: 8px; vertical-align: middle; border: 1px solid #e2e8f0; }
+  .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; background: #f8fafc; margin: 1rem 0; }
+  .note { font-size: 0.8125rem; color: #6b7280; font-style: italic; margin-top: 0.5rem; }
+  ul { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.4rem; }
+  .prompt { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 1rem 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 0.8125rem; }
+  .prompt b { color: #111827; }
+  @media (max-width: 768px) {
+    body { padding: 32px 24px; }
+    h1 { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+  <h1>Style Guide &mdash; Wind Forecast Decision Portal</h1>
+  <p class="font-mono text-context">Locked direction: <b>F &mdash; Publication Moment</b> &middot; Subject-derived visual language &middot; Frozen system</p>
+
+  <h2>1. Premise &amp; Source Boundary</h2>
+  <p>Subject: Wind Forecast Decision Portal for UK utility traders. Traders make high-stakes decisions at D-1 09:00 London cutoff using forecast vintages. Tension: certainty vs uncertainty, forecast vs actual, now vs later, buy vs shortfall risk.</p>
+  <p><b>Derived mechanism:</b> The "as of" timestamp is the dominant mark. Everything not essential to the decision moment recedes. No look-ahead bias&mdash;only what was known at cutoff.</p>
+  <div class="note">Source boundary: Round 1 typography-led directions A&ndash;J. Direction F selected by explicit human lock. No Round 2 code proceeds without a locked direction.</div>
+
+  <h2>2. Typography &amp; Font Licensing</h2>
+  <p>System fonts only&mdash;no Google Fonts, no external CDN (isolation protocol). If a specific font is required by a future locked direction, self-host WOFF2 in <code>public/fonts/</code> with <code>@font-face</code> in CSS.</p>
+  <table>
+    <tr><th>Role</th><th>Font Stack</th><th>Use</th></tr>
+    <tr><td><b>Serif (display / moment)</b></td><td class="font-mono">ui-serif, Georgia, Cambria, "Times New Roman", Times, serif</td><td>Headings, the "as of" timestamp, dominant marks</td></tr>
+    <tr><td><b>Mono (data)</b></td><td class="font-mono">ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace</td><td>Numerals, timestamps, MW values, codes (A1&ndash;A6)</td></tr>
+    <tr><td><b>Sans (UI)</b></td><td class="font-mono">ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif</td><td>Shell, nav, body copy</td></tr>
+  </table>
+  <div class="note">Font licensing: System fonts&mdash;no license required. No variable-font axes used in production (simulated via font-weight/font-stretch where available).</div>
+
+  <h2>3. Color Roles &amp; Proportions</h2>
+  <p>Direction F is a 2-color palette: <b>moment</b> (ink) and <b>context</b> (muted). Dark mode is a considered palette, not inversion.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="swatch" style="background:#111827;"></div><b>moment</b> #111827<br>
+      <span class="font-mono text-context-light">Primary ink &mdash; headings, moment timestamp, primary text</span>
+    </div>
+    <div class="card">
+      <div class="swatch" style="background:#6b7280;"></div><b>context</b> #6b7280<br>
+      <span class="font-mono text-context-light">Secondary &mdash; supporting data, labels, captions</span>
+    </div>
+    <div class="card">
+      <div class="swatch" style="background:#9ca3af;"></div><b>context-light</b> #9ca3af<br>
+      <span class="font-mono text-context-light">Tertiary &mdash; placeholders, muted metadata</span>
+    </div>
+    <div class="card">
+      <div class="swatch" style="background:#ffffff;"></div><b>bg</b> #ffffff<br>
+      <span class="font-mono text-context-light">Page background (light)</span>
+    </div>
+    <div class="card">
+      <div class="swatch" style="background:#f8fafc;"></div><b>surface</b> #f8fafc<br>
+      <span class="font-mono text-context-light">Card surface, slightly off-white</span>
+    </div>
+    <div class="card">
+      <div class="swatch" style="background:#e2e8f0;"></div><b>border</b> #e2e8f0<br>
+      <span class="font-mono text-context-light">Subtle separators only</span>
+    </div>
+  </div>
+  <h3>Dark mode (considered palette, <code>data-theme="dark"</code>)</h3>
+  <div class="grid">
+    <div class="card">
+      <div class="swatch" style="background:#ffffff;"></div><b>moment</b> #ffffff<br>
+      <span class="font-mono text-context-light">Primary ink (dark)</span>
+    </div>
+    <div class="card">
+      <div class="swatch" style="background:#9ca3af;"></div><b>context</b> #9ca3af<br>
+      <span class="font-mono text-context-light">Secondary (dark)</span>
+    </div>
+    <div class="card">
+      <div class="swatch" style="background:#6b7280;"></div><b>context-light</b> #6b7280<br>
+      <span class="font-mono text-context-light">Tertiary (dark)</span>
+    </div>
+    <div class="card">
+      <div class="swatch" style="background:#0f172a;"></div><b>bg</b> #0f172a<br>
+      <span class="font-mono text-context-light">Deep slate, not pure black</span>
+    </div>
+    <div class="card">
+      <div class="swatch" style="background:#1e293b;"></div><b>surface</b> #1e293b<br>
+      <span class="font-mono text-context-light">Card surface (dark)</span>
+    </div>
+    <div class="card">
+      <div class="swatch" style="background:#334155;"></div><b>border</b> #334155<br>
+      <span class="font-mono text-context-light">Subtle separators (dark)</span>
+    </div>
+  </div>
+
+  <h2>4. Hierarchy &amp; Composition Rules</h2>
+  <ul>
+    <li><b>Moment first:</b> The "as of" timestamp is set in large serif display (#111827) at the top of each decision context.</li>
+    <li><b>Data in mono:</b> All numerals (MW, MWh, timestamps) set in monospace with tabular-nums for vertical alignment.</li>
+    <li><b>No color as decoration:</b> Color is used only for moment (ink) and context (muted). No blue, green, red, amber accents for status&mdash;use weight, size, and position instead.</li>
+    <li><b>No borders as ornament:</b> Borders only where functionally necessary (card separation, input fields).</li>
+    <li><b>Whitespace as structure:</b> Generous whitespace separates sections; the half-hour grid (48 periods) informs the spatial rhythm.</li>
+  </ul>
+
+  <h2>5. Spacing &amp; Rhythm</h2>
+  <p>Base spacing unit derived from the half-hour grid (48 periods/day). Tailwind default spacing (4px base) preserved with custom steps:</p>
+  <table>
+    <tr><th>Token</th><th>Value</th><th>Use</th></tr>
+    <tr><td class="font-mono">--spacing base</td><td class="font-mono">4px</td><td>All padding/margin steps</td></tr>
+    <tr><td class="font-mono">spacing["18"]</td><td class="font-mono">4.5rem</td><td>Section gaps</td></tr>
+    <tr><td class="font-mono">spacing["22"]</td><td class="font-mono">5.5rem</td><td>Major section breaks</td></tr>
+    <tr><td class="font-mono">spacing["26"]</td><td class="font-mono">6.5rem</td><td>Page-level divisions</td></tr>
+  </table>
+  <p class="font-mono text-context">Radius: 8px (--radius). Cards use subtle border + surface fill, no shadow.</p>
+
+  <h2>6. Language Behavior</h2>
+  <ul>
+    <li>Cutoff hour expressed 0&ndash;23, London timezone (Europe/London).</li>
+    <li>Dates as <code>YYYY-MM-DD</code>; timestamps ISO 8601, rendered in London time.</li>
+    <li>Positive error = over-forecast = shortfall risk for buyer (<code>error_mw = forecast_mw - actual_mw</code>).</li>
+    <li>"As of" phrasing dominant: what was known at cutoff, nothing after.</li>
+  </ul>
+
+  <h2>7. Responsive Variation</h2>
+  <p>Desktop-first (traders use multi-monitor). Sidebar collapses below 1024px (lg breakpoint). Font sizes scale down on mobile; moment display remains serif but smaller. Charts stack vertically below lg breakpoint.</p>
+
+  <h2>8. Accessibility Boundaries</h2>
+  <ul>
+    <li>Color never sole carrier of meaning (2-color palette; status via weight/position).</li>
+    <li>Focus rings on interactive elements (2px ring, offset-2).</li>
+    <li>Minimum touch target 44px for buttons/inputs.</li>
+    <li>Dark mode contrast meets WCAG AA (moment #ffffff on bg #0f172a = ~15.6:1).</li>
+  </ul>
+
+  <h2>9. Invariants &amp; Prohibited Normalization</h2>
+  <ul>
+    <li>ECharts theme registered <b>once</b> at module load (<code>echartsTheme.ts</code>)&mdash;never per-component.</li>
+    <li>No new dependencies (no font packages, chart libs, UI kits).</li>
+    <li>No backend/API client changes&mdash;frontend only.</li>
+    <li>No Google Fonts, no external font CDN.</li>
+    <li>Dark mode charts use explicit color overrides (ECharts does not inherit CSS).</li>
+    <li>No borders, shapes, icons, images, gradients, shadows, SVG in Round 1 directions.</li>
+  </ul>
+
+  <h2>10. Asset / License Status</h2>
+  <ul>
+    <li>Fonts: System stacks&mdash;no license, no self-hosted assets.</li>
+    <li>Charts: echarts ^5.4.3 + echarts-for-react ^3.0.2 (existing, Apache-2.0 / MIT).</li>
+    <li>Icons: Inline SVG only (theme toggle, status marks)&mdash;no icon library.</li>
+  </ul>
+
+  <h2>11. Copyable Continuation Prompts</h2>
+  <div class="prompt">
+    <b>Extend tokens:</b> Add a new color role &rarr; edit <code>tailwind.config.js</code> colors + <code>index.css</code> CSS custom properties + dark mode override.
+  </div>
+  <div class="prompt">
+    <b>Add a chart:</b> Use <code>LineChart</code>/<code>MultiLineChart</code>/<code>BarChart</code>/<code>HeatmapChart</code> from <code>charts.tsx</code>&mdash;theme applied automatically via <code>useTheme()</code>.
+  </div>
+  <div class="prompt">
+    <b>Change locked direction:</b> Re-run Round 1 (A&ndash;J), lock a new direction, regenerate tokens from its concept capsule, then rebuild components + pages.
+  </div>
+
+  <p class="note" style="margin-top: 3rem;">&mdash; End of Style Guide &mdash;</p>
+</body>
+</html>

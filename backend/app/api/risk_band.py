@@ -1,14 +1,14 @@
 """Risk band endpoint with leakage protection."""
 
-from fastapi import APIRouter, HTTPException
-from app.api.schemas import (
-    RiskBandRequest,
-    RiskBandResponse,
-    RiskBandPoint,
-)
-from app.domain.risk import compute_risk_band
-from app.config import settings
 import pandas as pd
+from fastapi import APIRouter, HTTPException
+
+from app.api.schemas import (
+    RiskBandPoint,
+    RiskBandResponse,
+)
+from app.config import settings
+from app.domain.risk import compute_risk_band
 
 router = APIRouter()
 
@@ -26,8 +26,8 @@ async def get_risk_band(
     except Exception:
         raise HTTPException(status_code=422, detail="Invalid delivery_date format")
 
-    from app.data.loader import load_snapshot
     from app.config import settings as cfg
+    from app.data.loader import load_snapshot
 
     snapshot = load_snapshot(cfg.snapshot_path)
 
@@ -38,6 +38,7 @@ async def get_risk_band(
         quantile=quantile,
         cutoff_hour=cutoff_hour,
         cutoff_minute=cutoff_minute,
+        availability_lag_minutes=settings.availability_lag_minutes,
     )
 
     if not result["risk_adjusted"]:

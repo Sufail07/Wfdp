@@ -4,6 +4,44 @@ A production-ready full-stack application for UK utility wind forecast decision-
 
 ## Architecture Overview
 
+See `docs/ARCHITECTURE.md` for the full system architecture, data flow, domain logic, API contract, deployment, testing strategy, and the remediation plan from `ARCHITECTURE_REVIEW.md`.
+
+```
+wind-forecast-portal/
+├─ api/index.py              # Vercel serverless entrypoint
+├─ backend/                  # FastAPI backend
+│  ├─ app/
+│  │  ├─ api/              # API route handlers
+│  │  ├─ domain/           # Core business logic (pure functions)
+│  │  ├─ data/             # Data loading & snapshot management
+│  │  ├─ config.py         # Pydantic settings
+│  │  └─ main.py           # FastAPI app factory
+│  ├─ ingest/               # Data ingestion CLI
+│  ├─ data/snapshot/        # Parquet snapshot files (committed)
+│  ├─ tests/                # Backend tests
+│  ├─ Dockerfile
+│  └─ pyproject.toml
+├─ frontend/                 # React 18 + TypeScript + Vite
+│  ├─ src/
+│  │  ├─ components/       # Shared UI components
+│  │  ├─ context/          # React context providers
+│  │  ├─ features/         # Feature-specific components
+│  │  │  ├─ brief/        # Decision Brief screen
+│  │  │  ├─ accuracy/     # Forecast Accuracy screen
+│  │  │  └─ method/       # Method & Data screen
+│  │  ├─ hooks/            # Custom React hooks
+│  │  ├─ api/              # Generated OpenAPI client
+│  │  └─ utils/            # Utility functions
+│  ├─ Dockerfile
+│  └─ nginx.conf
+├─ docs/
+│  ├─ ARCHITECTURE.md       # System architecture + remediation plan
+│  ├─ data-notes.md         # API exploration notes
+│  └─ decisions.md          # Key technical decisions
+├─ docker-compose.yml
+├─ vercel.json
+├─ heroku.yml
+└─ .github/workflows/ci.yml
 ```
 wind-forecast-portal/
 ├── api/index.py              # Vercel serverless entrypoint
@@ -118,12 +156,32 @@ npm run dev
 - **A4**: WINDFOR provides all forecast vintages; latest published at/before cutoff is decision forecast
 - **A5**: Forecasts with publishTime > startTime are invalid (future knowledge)
 - **A6**: Data covers January 2026 only (delivery dates 2026-01-02 to 2026-02-01)
+- **A7**: `availability_lag_minutes` = 0 (publishTime assumed to equal trader availability time; configurable via env var)
 
 **Caveats:**
 - Metered wind only (excludes embedded wind)
-- Single month of data (January 2026)
+- Single month of data (January 2026); calendar bias — do not extrapolate to other seasons
 - Cutoff time assumption may differ from actual trader workflows
 - No database - uses Parquet snapshots loaded in memory
+- **Actuals are not final**: FUELHH values can be revised in later settlement runs; accuracy is "versus actuals as of `<fetch time>`" — see `/meta` for dataset version and fetch time
+- **No authentication or roles**: public demo; production needs SSO + RBAC + audit logging
+- **Data licence**: Elexon/BMRS data redistribution terms must be verified before committing to a public repo; see `docs/data-notes.md` for licence findings
+
+## Data Licence
+
+Elexon/BMRS data (FUELHH and WINDFOR) is governed by BMRS licence terms. Before committing snapshot data to a public repository:
+1. Verify redistribution terms with Elexon
+2. Add required attribution to this README and the Method & Data page
+3. If terms are restrictive, commit only the ingestion tooling and a small sample snapshot
+
+## Security
+
+- CORS is restricted to configured origins (no wildcard)
+- Rate limiting via Vercel firewall
+- Security headers (CSP, X-Content-Type-Options, X-Frame-Options) set via Vercel config
+- Supply chain: lockfiles committed, pip-audit + npm audit + Dependabot in CI
+- Snapshot checksums verified on load; fail loudly on mismatch
+- No secrets, no personal data, read-only API
 
 ## AI Tools Disclosure
 

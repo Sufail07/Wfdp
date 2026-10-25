@@ -1,9 +1,16 @@
 """Pydantic schemas for API request/response models."""
 
-from pydantic import BaseModel, Field, validator
-from datetime import date, datetime
-from typing import Optional, List, Dict, Any
+from datetime import date
+from typing import Any
 
+from pydantic import BaseModel, Field
+
+# --- Input caps (security / DoS protection) ---
+MAX_RANGE_DAYS = 92          # ~3 months max range
+MAX_BINS = 200
+MAX_VINTAGES = 50
+MAX_CUTOFF_HOUR = 23
+MAX_CUTOFF_MINUTE = 59
 
 # --- /meta ---
 class MetaResponse(BaseModel):
@@ -13,9 +20,11 @@ class MetaResponse(BaseModel):
     default_cutoff_minute: int
     timezone: str
     snapshot_id: str
-    row_counts: Dict[str, int]
-    assumptions: List[str]
-    caveats: List[str]
+    dataset_version: str | None = None
+    row_counts: dict[str, int]
+    assumptions: list[str]
+    caveats: list[str]
+    freshness: str | None = None
 
 
 # --- /decision-forecast ---
@@ -38,12 +47,12 @@ class DecisionForecastResponse(BaseModel):
     cutoff_minute: int
     cutoff_utc: str
     total_points: int
-    forecasts: List[DecisionForecastPoint]
-    total_expected_mwh: Optional[float] = None
-    peak_mw: Optional[float] = None
-    min_mw: Optional[float] = None
-    mean_mw: Optional[float] = None
-    forecast_published_at: Optional[str] = None
+    forecasts: list[DecisionForecastPoint]
+    total_expected_mwh: float | None = None
+    peak_mw: float | None = None
+    min_mw: float | None = None
+    mean_mw: float | None = None
+    forecast_published_at: str | None = None
 
 
 # --- /forecast-revisions ---
@@ -56,8 +65,8 @@ class ForecastRevisionPoint(BaseModel):
 
 class ForecastRevisionsResponse(BaseModel):
     delivery_date: date
-    vintages: List[ForecastRevisionPoint]
-    max_vintages: Optional[int] = None
+    vintages: list[ForecastRevisionPoint]
+    max_vintages: int | None = None
 
 
 # --- /accuracy/summary ---
@@ -73,51 +82,51 @@ class AccuracySummaryResponse(BaseModel):
     to_date: date
     cutoff_hour: int
     cutoff_minute: int
-    metrics: Dict[str, Any]
+    metrics: dict[str, Any]
 
 
 # --- /accuracy/by-horizon ---
 class AccuracyByHorizonResponse(BaseModel):
     from_date: date
     to_date: date
-    results: List[Dict[str, Any]]
+    results: list[dict[str, Any]]
 
 
 # --- /accuracy/by-hour ---
 class AccuracyByHourResponse(BaseModel):
     from_date: date
     to_date: date
-    cutoff_hour: Optional[int] = None
-    cutoff_minute: Optional[int] = None
-    results: List[Dict[str, Any]]
+    cutoff_hour: int | None = None
+    cutoff_minute: int | None = None
+    results: list[dict[str, Any]]
 
 
 # --- /accuracy/by-wind-level ---
 class AccuracyByWindLevelResponse(BaseModel):
     from_date: date
     to_date: date
-    cutoff_hour: Optional[int] = None
-    cutoff_minute: Optional[int] = None
-    results: List[Dict[str, Any]]
+    cutoff_hour: int | None = None
+    cutoff_minute: int | None = None
+    results: list[dict[str, Any]]
 
 
 # --- /accuracy/daily ---
 class AccuracyDailyResponse(BaseModel):
     from_date: date
     to_date: date
-    cutoff_hour: Optional[int] = None
-    cutoff_minute: Optional[int] = None
-    results: List[Dict[str, Any]]
+    cutoff_hour: int | None = None
+    cutoff_minute: int | None = None
+    results: list[dict[str, Any]]
 
 
 # --- /accuracy/error-distribution ---
 class AccuracyErrorDistributionResponse(BaseModel):
     from_date: date
     to_date: date
-    cutoff_hour: Optional[int] = None
-    cutoff_minute: Optional[int] = None
-    bins: Optional[int] = None
-    distribution: Dict[str, Any]
+    cutoff_hour: int | None = None
+    cutoff_minute: int | None = None
+    bins: int | None = None
+    distribution: dict[str, Any]
 
 
 # --- /risk-band ---
@@ -143,5 +152,5 @@ class RiskBandResponse(BaseModel):
     in_sample: bool
     sample_days: int
     sample_errors: int
-    over_forecast_quantile: Optional[float] = None
-    risk_adjusted: List[RiskBandPoint]
+    over_forecast_quantile: float | None = None
+    risk_adjusted: list[RiskBandPoint]

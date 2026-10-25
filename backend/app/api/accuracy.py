@@ -1,14 +1,19 @@
 """Accuracy endpoints - summary, by-horizon, by-hour, by-wind-level, daily, error-distribution."""
 
+import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
+
 from app.api.schemas import (
-    AccuracySummaryResponse,
+    MAX_BINS,
+    MAX_RANGE_DAYS,
     AccuracyByHorizonResponse,
     AccuracyByHourResponse,
     AccuracyByWindLevelResponse,
     AccuracyDailyResponse,
     AccuracyErrorDistributionResponse,
+    AccuracySummaryResponse,
 )
+from app.config import settings
 from app.domain.asof import select_decision_forecast
 from app.domain.errors import join_forecast_actual
 from app.domain.slices import (
@@ -18,16 +23,45 @@ from app.domain.slices import (
     compute_daily,
     compute_error_distribution,
 )
-from app.config import settings
-import pandas as pd
 
 router = APIRouter()
 
 
+def _validate_range(from_date: str, to_date: str) -> tuple[pd.Timestamp, pd.Timestamp]:
+    """Validate date range caps; raise 422 on violations."""
+    try:
+        from_dt = pd.Timestamp(from_date)
+        to_dt = pd.Timestamp(to_date)
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid date format")
+
+    if to_dt < from_dt:
+        raise HTTPException(status_code=422, detail="to_date must be >= from_date")
+
+    range_days = (to_dt - from_dt).days
+    if range_days > MAX_RANGE_DAYS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Date range exceeds {MAX_RANGE_DAYS} days (requested {range_days})",
+        )
+
+    return from_dt, to_dt
+
+
+def _validate_bins(bins: int) -> int:
+    """Validate histogram bins cap."""
+    if bins > MAX_BINS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"bins exceeds {MAX_BINS} (requested {bins})",
+        )
+    return bins
+
+
 def _load_aligned_pairs(from_date: str, to_date: str, cutoff_hour: int, cutoff_minute: int) -> pd.DataFrame:
     """Load snapshot and compute aligned forecast-actual pairs for date range."""
-    from app.data.loader import load_snapshot
     from app.config import settings as cfg
+    from app.data.loader import load_snapshot
 
     snapshot = load_snapshot(cfg.snapshot_path)
 
@@ -62,6 +96,8 @@ async def get_accuracy_summary(
     """Get aggregate accuracy metrics."""
     from app.domain.metrics import compute_metrics
 
+    _validate_range(from_date, to_date)
+
     aligned = _load_aligned_pairs(from_date, to_date, cutoff_hour, cutoff_minute)
     if aligned.empty:
         raise HTTPException(status_code=404, detail="No data for date range")
@@ -83,6 +119,8 @@ async def get_accuracy_by_horizon(
     to_date: str,
 ):
     """Get accuracy by forecast horizon."""
+    _validate_range(from_date, to_date)
+
     aligned = _load_aligned_pairs(from_date, to_date, settings.cutoff_hour, settings.cutoff_minute)
     if aligned.empty:
         raise HTTPException(status_code=404, detail="No data for date range")
@@ -105,6 +143,8 @@ async def get_accuracy_by_hour(
     cutoff_minute: int = None,
 ):
     """Get accuracy by hour of day."""
+    _validate_range(from_date, to_date)
+
     ch = cutoff_hour if cutoff_hour is not None else settings.cutoff_hour
     cm = cutoff_minute if cutoff_minute is not None else settings.cutoff_minute
 
@@ -132,6 +172,8 @@ async def get_accuracy_by_wind_level(
     cutoff_minute: int = None,
 ):
     """Get accuracy by actual wind level."""
+    _validate_range(from_date, to_date)
+
     ch = cutoff_hour if cutoff_hour is not None else settings.cutoff_hour
     cm = cutoff_minute if cutoff_minute is not None else settings.cutoff_minute
 
@@ -159,6 +201,8 @@ async def get_accuracy_daily(
     cutoff_minute: int = None,
 ):
     """Get daily MAE/bias time series."""
+    _validate_range(from_date, to_date)
+
     ch = cutoff_hour if cutoff_hour is not None else settings.cutoff_hour
     cm = cutoff_minute if cutoff_minute is not None else settings.cutoff_minute
 
@@ -187,6 +231,9 @@ async def get_accuracy_error_distribution(
     bins: int = Query(default=50, ge=10, le=200),
 ):
     """Get error distribution histogram and quantiles."""
+    _validate_range(from_date, to_date)
+    _validate_bins(bins)
+
     ch = cutoff_hour if cutoff_hour is not None else settings.cutoff_hour
     cm = cutoff_minute if cutoff_minute is not None else settings.cutoff_minute
 

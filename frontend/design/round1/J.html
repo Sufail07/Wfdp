@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction J &mdash; Decision Window</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #ffffff;
+    color: #111827;
+    line-height: 1.6;
+    padding: 64px 96px;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  header {
+    margin-bottom: 64px;
+    text-align: center;
+  }
+  h1 {
+    font-size: 3rem;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    color: #111827;
+    margin-bottom: 16px;
+  }
+  .subtitle {
+    font-size: 1.125rem;
+    color: #4b5563;
+    line-height: 1.7;
+    max-width: 42ch;
+    margin: 0 auto;
+  }
+  .window {
+    margin-top: 72px;
+    text-align: center;
+  }
+  .window h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #6b7280;
+    margin-bottom: 24px;
+  }
+  .cutoff-moment {
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    color: #111827;
+    margin-bottom: 12px;
+  }
+  .cutoff-date {
+    font-size: 1.125rem;
+    color: #4b5563;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 40px;
+  }
+  .action {
+    font-size: 1.25rem;
+    color: #111827;
+    line-height: 1.6;
+    max-width: 46ch;
+    margin: 0 auto 40px;
+  }
+  .kpis {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    margin-top: 56px;
+    border-top: 2px solid #e5e5e5;
+    padding-top: 32px;
+  }
+  .kpi {
+    text-align: center;
+  }
+  .kpi .val {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #111827;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .kpi .lab {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .note {
+    margin-top: 64px;
+    font-size: 0.8125rem;
+    color: #9ca3af;
+    line-height: 1.7;
+    text-align: center;
+    max-width: 42ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .note b { color: #111827; }
+  @media (max-width: 768px) {
+    body { padding: 32px 24px; }
+    h1 { font-size: 2.25rem; }
+    .cutoff-moment { font-size: 2.5rem; }
+    .kpis { gap: 24px; flex-direction: column; align-items: center; }
+    .kpi .val { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Decision Window</h1>
+    <p class="subtitle">A narrow, actionable moment&mdash;the D-1 09:00 London cutoff. Everything else recedes. Wide sans-serif, generous whitespace, single color. Focused clarity.</p>
+  </header>
+  <div class="window">
+    <h2>The Moment</h2>
+    <div class="cutoff-moment">09:00</div>
+    <div class="cutoff-date">14 Jan 2026 &middot; D-1 cutoff &middot; Europe/London</div>
+    <p class="action">The forecast published at 08:30 is locked at cutoff. No revision after this point. Act on what you know, not what you wish you knew.</p>
+    <div class="kpis">
+      <div class="kpi"><span class="val">7,840</span><span class="lab">Total Expected MWh</span></div>
+      <div class="kpi"><span class="val">331</span><span class="lab">Peak Forecast MW</span></div>
+      <div class="kpi"><span class="val">94</span><span class="lab">Min Forecast MW</span></div>
+    </div>
+  </div>
+  <p class="note"><b>Direction J &mdash; Decision Window.</b> The narrow actionable moment&mdash;wide sans, generous whitespace, one color. Everything not essential to the decision is removed.</p>
+</body>
+</html>

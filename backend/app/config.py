@@ -1,6 +1,7 @@
 from pathlib import Path
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -13,12 +14,13 @@ class Settings(BaseSettings):
     # API Settings
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    cors_origins: list[str] = Field(default_factory=lambda: ["*"])
+    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000", "http://localhost:80"])
 
     # Timezone & Cutoff
     cutoff_hour: int = 9
     cutoff_minute: int = 0
     timezone: str = "Europe/London"
+    availability_lag_minutes: int = 0
 
     # Snapshot Path
     snapshot_path: Path = Path(__file__).parent.parent / "data" / "snapshot"

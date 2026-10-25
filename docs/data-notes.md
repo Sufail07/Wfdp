@@ -50,8 +50,32 @@
   ```
 - **Fields**:
   - `startTime`: ISO8601 UTC timestamp (forecast delivery period start)
-  - `publishTime`: ISO8601 UTC timestamp (when forecast was published)
+  - `publishTime`: ISO8601 UTC timestamp (when forecast was created/published)
   - `forecastMW`: Float (MW)
+
+## WP0 Probe Findings (Sprint 1)
+
+### Availability / publication lag (Finding 1.2 🔴)
+The Elexon/BMRS API exposes `publishTime` as when the forecast was *created*, not when it became *available to the trader*. There can be an ingestion lag between publication and availability on BMRS.
+
+- **No availability timestamp field** exists in the API response.
+- **Configurable `availability_lag_minutes`** added (default 0) to `backend/app/config.py` and `backend/app/domain/asof.py`. The cutoff is shifted earlier by this many minutes.
+- **Assumption stated**: README, Method page, and video must disclose that `availability_lag_minutes=0` means we assume `publishTime` == availability time.
+
+### Data volume (Finding 1.5 🔴)
+- **FUELHH (WIND only)**: 31 days × 48 periods = 1,488 rows expected for January 2026
+- **WINDFOR**: Multiple vintages per delivery period; actual count to be confirmed by ingestion
+- **Snapshot Parquet size**: To be measured after first ingestion; if large, revisit DuckDB
+
+### Elexon rate limits (Finding 2.4 🟠)
+- Rate limits not yet confirmed from live API
+- Ingestion is chunked by day with exponential backoff (tenacity retries)
+- Ingestion is idempotent and resumable
+
+### Data licence (Finding 4.7 🔴)
+- Elexon/BMRS data is governed by BMRS licence terms
+- **Must verify** redistribution terms before committing data to a public repo
+- If restrictive: commit only ingestion tooling + small sample; add attribution/licence text to README and Method page
 
 ## Data Characteristics (Expected for January 2026)
 
@@ -69,7 +93,7 @@
 - **Unique key**: (startTime, publishTime)
 - **Value range**: 0 - ~15,000 MW
 
-## Assumptions (A1-A6 from Architecture Plan)
+## Assumptions (A1-A7 from Architecture Plan)
 
 - **A1**: Decision cutoff is D-1 09:00 Europe/London (08:00 or 09:00 UTC depending on DST)
 - **A2**: Delivery day D runs 00:00-23:30 London time (48 half-hour periods)
@@ -77,6 +101,7 @@
 - **A4**: WINDFOR provides all forecast vintages; we select the latest published at or before cutoff
 - **A5**: Forecasts with publishTime > startTime are invalid (future knowledge)
 - **A6**: January 2026 data only (delivery dates 2026-01-02 to 2026-02-01)
+- **A7**: `availability_lag_minutes` = 0 (publishTime assumed to equal availability time; configurable)
 
 ## Sample Fixtures
 

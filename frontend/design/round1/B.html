@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction B &mdash; Vintage Stack</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #ffffff;
+    color: #111827;
+    line-height: 1.5;
+    padding: 48px 64px;
+  }
+  header {
+    margin-bottom: 56px;
+  }
+  h1 {
+    font-size: 2.75rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    color: #111827;
+  }
+  .meta {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+  .stack {
+    max-width: 700px;
+    margin-top: 40px;
+  }
+  .stack h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #4b5563;
+    margin-bottom: 24px;
+  }
+  .vintage {
+    margin-bottom: 32px;
+    position: relative;
+    padding-left: 16px;
+  }
+  .vintage:last-child { margin-bottom: 0; }
+  .vintage-tag {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    position: absolute;
+    left: -16px;
+    top: 4px;
+  }
+  .vintage-1 .vintage-tag { color: #b45309; }
+  .vintage-2 .vintage-tag { color: #1d4ed8; }
+  .vintage-3 .vintage-tag { color: #047857; }
+  .vintage-rows {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9rem;
+    line-height: 1.9;
+  }
+  .vintage-rows div {
+    display: grid;
+    grid-template-columns: 96px 1fr 110px;
+    gap: 14px;
+    margin-bottom: 5px;
+  }
+  .vintage-rows .time { color: #9ca3af; text-align: right; }
+  .vintage-rows .value { color: #111827; }
+  .vintage-1 .vintage-rows .value { color: #78350f; font-weight: 600; }
+  .vintage-2 .vintage-rows .value { color: #1e3a8a; font-weight: 600; }
+  .vintage-3 .vintage-rows .value { color: #065f46; font-weight: 600; }
+  .vintage-rows .changed { background: rgba(0,0,0,0.03); }
+  .note {
+    margin-top: 56px;
+    font-size: 0.8125rem;
+    color: #6b7280;
+    max-width: 640px;
+    line-height: 1.7;
+  }
+  .note b { color: #111827; }
+  @media (max-width: 768px) {
+    body { padding: 32px 24px; }
+    .vintage-rows div { grid-template-columns: 80px 1fr 90px; gap: 10px; font-size: 0.85rem; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Forecast Vintages</h1>
+    <div class="meta">Delivery 15 Jan 2026 &middot; Cutoff D-1 09:00 London</div>
+  </header>
+  <div class="stack">
+    <h2>Revisions as Typographic Layers</h2>
+    <div class="vintage vintage-1">
+      <div class="vintage-tag">VINTAGE 1 &mdash; PUBLISHED 06:00</div>
+      <div class="vintage-rows">
+        <div><span class="time">00:00</span><span class="value">230</span><span class="value">MW</span></div>
+        <div><span class="time">02:00</span><span class="value">270</span><span class="value">MW</span></div>
+        <div><span class="time">04:00</span><span class="value">290</span><span class="value">MW</span></div>
+        <div class="changed"><span class="time">06:00</span><span class="value">292</span><span class="value">MW</span></div>
+        <div class="changed"><span class="time">08:00</span><span class="value">315</span><span class="value">MW</span></div>
+        <div class="changed"><span class="time">10:00</span><span class="value">325</span><span class="value">MW</span></div>
+        <div><span class="time">12:00</span><span class="value">328</span><span class="value">MW</span></div>
+        <div><span class="time">14:00</span><span class="value">312</span><span class="value">MW</span></div>
+        <div><span class="time">16:00</span><span class="value">282</span><span class="value">MW</span></div>
+        <div><span class="time">18:00</span><span class="value">235</span><span class="value">MW</span></div>
+        <div><span class="time">20:00</span><span class="value">175</span><span class="value">MW</span></div>
+        <div><span class="time">22:00</span><span class="value">122</span><span class="value">MW</span></div>
+      </div>
+    </div>
+    <div class="vintage vintage-2">
+      <div class="vintage-tag">VINTAGE 2 &mdash; PUBLISHED 07:30</div>
+      <div class="vintage-rows">
+        <div><span class="time">00:00</span><span class="value">232</span><span class="value">MW</span></div>
+        <div><span class="time">02:00</span><span class="value">272</span><span class="value">MW</span></div>
+        <div><span class="time">04:00</span><span class="value">293</span><span class="value">MW</span></div>
+        <div class="changed"><span class="time">06:00</span><span class="value">295</span><span class="value">MW</span></div>
+        <div class="changed"><span class="time">08:00</span><span class="value">318</span><span class="value">MW</span></div>
+        <div class="changed"><span class="time">10:00</span><span class="value">328</span><span class="value">MW</span></div>
+        <div><span class="time">12:00</span><span class="value">330</span><span class="value">MW</span></div>
+        <div><span class="time">14:00</span><span class="value">315</span><span class="value">MW</span></div>
+        <div><span class="time">16:00</span><span class="value">285</span><span class="value">MW</span></div>
+        <div><span class="time">18:00</span><span class="value">238</span><span class="value">MW</span></div>
+        <div><span class="time">20:00</span><span class="value">178</span><span class="value">MW</span></div>
+        <div><span class="time">22:00</span><span class="value">124</span><span class="value">MW</span></div>
+      </div>
+    </div>
+    <div class="vintage vintage-3">
+      <div class="vintage-tag">VINTAGE 3 &mdash; PUBLISHED 08:30 (CUTOFF)</div>
+      <div class="vintage-rows">
+        <div><span class="time">00:00</span><span class="value">234</span><span class="value">MW</span></div>
+        <div><span class="time">02:00</span><span class="value">273</span><span class="value">MW</span></div>
+        <div><span class="time">04:00</span><span class="value">295</span><span class="value">MW</span></div>
+        <div class="changed"><span class="time">06:00</span><span class="value">298</span><span class="value">MW</span></div>
+        <div class="changed"><span class="time">08:00</span><span class="value">321</span><span class="value">MW</span></div>
+        <div class="changed"><span class="time">10:00</span><span class="value">330</span><span class="value">MW</span></div>
+        <div><span class="time">12:00</span><span class="value">331</span><span class="value">MW</span></div>
+        <div><span class="time">14:00</span><span class="value">318</span><span class="value">MW</span></div>
+        <div><span class="time">16:00</span><span class="value">288</span><span class="value">MW</span></div>
+        <div><span class="time">18:00</span><span class="value">241</span><span class="value">MW</span></div>
+        <div><span class="time">20:00</span><span class="value">180</span><span class="value">MW</span></div>
+        <div><span class="time">22:00</span><span class="value">125</span><span class="value">MW</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>Direction B &mdash; Vintage Stack.</b> Each forecast revision is a typographic layer, distinguished by weight and color depth. Earlier vintages recede; the cutoff vintage carries full weight. Three colors only: amber (vintage 1), blue (vintage 2), green (vintage 3).</p>
+</body>
+</html>

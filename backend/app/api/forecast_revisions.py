@@ -1,9 +1,10 @@
 """Forecast revisions endpoint - all vintages for a delivery date."""
 
-from fastapi import APIRouter, HTTPException
-from app.api.schemas import ForecastRevisionsResponse, ForecastRevisionPoint
-from app.config import settings
 import pandas as pd
+from fastapi import APIRouter, HTTPException
+
+from app.api.schemas import ForecastRevisionPoint, ForecastRevisionsResponse
+from app.config import settings
 
 router = APIRouter()
 
@@ -19,8 +20,8 @@ async def get_forecast_revisions(
     except Exception:
         raise HTTPException(status_code=422, detail="Invalid delivery_date format")
 
-    from app.data.loader import load_snapshot
     from app.config import settings as cfg
+    from app.data.loader import load_snapshot
 
     snapshot = load_snapshot(cfg.snapshot_path)
     df = snapshot.windfor.copy()
@@ -44,7 +45,12 @@ async def get_forecast_revisions(
 
     # Get cutoff
     from app.domain.asof import get_cutoff_utc
-    cutoff_utc = get_cutoff_utc(delivery_dt, settings.cutoff_hour, settings.cutoff_minute)
+    cutoff_utc = get_cutoff_utc(
+        delivery_dt,
+        settings.cutoff_hour,
+        settings.cutoff_minute,
+        availability_lag_minutes=settings.availability_lag_minutes,
+    )
 
     revisions = []
     for _, row in day_forecasts.iterrows():

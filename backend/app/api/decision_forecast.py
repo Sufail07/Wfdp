@@ -1,10 +1,11 @@
 """Decision forecast endpoint."""
 
-from fastapi import APIRouter, HTTPException
-from app.api.schemas import DecisionForecastRequest, DecisionForecastResponse, DecisionForecastPoint
-from app.domain.asof import select_decision_forecast, get_cutoff_utc
-from app.config import settings
 import pandas as pd
+from fastapi import APIRouter, HTTPException
+
+from app.api.schemas import DecisionForecastPoint, DecisionForecastResponse
+from app.config import settings
+from app.domain.asof import get_cutoff_utc, select_decision_forecast
 
 router = APIRouter()
 
@@ -22,8 +23,8 @@ async def get_decision_forecast(
         raise HTTPException(status_code=422, detail="Invalid delivery_date format")
 
     # Load snapshot
-    from app.data.loader import load_snapshot
     from app.config import settings as cfg
+    from app.data.loader import load_snapshot
 
     snapshot_path = cfg.snapshot_path
     snapshot = load_snapshot(snapshot_path)
@@ -34,6 +35,7 @@ async def get_decision_forecast(
         delivery_dt,
         cutoff_hour=cutoff_hour,
         cutoff_minute=cutoff_minute,
+        availability_lag_minutes=settings.availability_lag_minutes,
     )
 
     if result.empty:

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction C &mdash; Half-Hour Grid</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #ffffff;
+    color: #111827;
+    line-height: 1.5;
+    padding: 48px 64px;
+  }
+  header {
+    margin-bottom: 48px;
+  }
+  h1 {
+    font-size: 2.75rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    color: #111827;
+  }
+  .meta {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-variant-numeric: tabular-nums;
+  }
+  .grid {
+    max-width: 1100px;
+    margin-top: 40px;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .grid td {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem;
+    padding: 7px 10px;
+    text-align: right;
+    border-bottom: 1px solid transparent;
+    color: #111827;
+  }
+  .grid tr:nth-child(even) td { background: #f9fafb; }
+  .grid tr:nth-child(odd) td { background: #ffffff; }
+  .grid tr:nth-child(odd) td:nth-child(even) { background: #f3f4f6; }
+  .grid tr:nth-child(even) td:nth-child(odd) { background: #f3f4f6; }
+  .grid td.period { color: #6b7280; text-align: left; font-size: 0.75rem; padding-left: 14px; }
+  .grid td.value { font-weight: 600; width: 72px; }
+  .grid td.mw { color: #6b7280; font-size: 0.6875rem; width: 36px; padding-right: 14px; }
+  .cutoff-row td { background: #dbeafe !important; }
+  .cutoff-row td.value { color: #1d4ed8; }
+  .cutoff-row td.mw { color: #1d4ed8; }
+  .rhythm-note {
+    margin-top: 56px;
+    font-size: 0.8125rem;
+    color: #6b7280;
+    max-width: 640px;
+    line-height: 1.7;
+  }
+  .rhythm-note b { color: #111827; }
+  @media (max-width: 768px) {
+    body { padding: 32px 24px; }
+    .grid td { font-size: 0.75rem; padding: 5px 6px; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Half-Hourly Forecast Grid</h1>
+    <div class="meta">Delivery 15 Jan 2026 &middot; 48 periods &middot; Cutoff D-1 09:00 London</div>
+  </header>
+  <table class="grid">
+    <tr class="cutoff-row">
+      <td class="period">00:00</td><td class="value">234</td><td class="mw">MW</td>
+      <td class="period">01:00</td><td class="value">258</td><td class="mw">MW</td>
+      <td class="period">02:00</td><td class="value">273</td><td class="mw">MW</td>
+      <td class="period">03:00</td><td class="value">285</td><td class="mw">MW</td>
+      <td class="period">04:00</td><td class="value">292</td><td class="mw">MW</td>
+      <td class="period">05:00</td><td class="value">298</td><td class="mw">MW</td>
+    </tr>
+    <tr class="cutoff-row">
+      <td class="period">00:30</td><td class="value">241</td><td class="mw">MW</td>
+      <td class="period">01:30</td><td class="value">267</td><td class="mw">MW</td>
+      <td class="period">02:30</td><td class="value">280</td><td class="mw">MW</td>
+      <td class="period">03:30</td><td class="value">289</td><td class="mw">MW</td>
+      <td class="period">04:30</td><td class="value">295</td><td class="mw">MW</td>
+      <td class="period">05:30</td><td class="value">301</td><td class="mw">MW</td>
+    </tr>
+    <tr class="cutoff-row">
+      <td class="period">06:00</td><td class="value">305</td><td class="mw">MW</td>
+      <td class="period">07:00</td><td class="value">312</td><td class="mw">MW</td>
+      <td class="period">08:00</td><td class="value">318</td><td class="mw">MW</td>
+      <td class="period">09:00</td><td class="value">324</td><td class="mw">MW</td>
+      <td class="period">10:00</td><td class="value">328</td><td class="mw">MW</td>
+      <td class="period">11:00</td><td class="value">330</td><td class="mw">MW</td>
+    </tr>
+    <tr>
+      <td class="period">06:30</td><td class="value">309</td><td class="mw">MW</td>
+      <td class="period">07:30</td><td class="value">315</td><td class="mw">MW</td>
+      <td class="period">08:30</td><td class="value">321</td><td class="mw">MW</td>
+      <td class="period">09:30</td><td class="value">326</td><td class="mw">MW</td>
+      <td class="period">10:30</td><td class="value">329</td><td class="mw">MW</td>
+      <td class="period">11:30</td><td class="value">330</td><td class="mw">MW</td>
+    </tr>
+    <tr>
+      <td class="period">12:00</td><td class="value">329</td><td class="mw">MW</td>
+      <td class="period">13:00</td><td class="value">324</td><td class="mw">MW</td>
+      <td class="period">14:00</td><td class="value">315</td><td class="mw">MW</td>
+      <td class="period">15:00</td><td class="value">302</td><td class="mw">MW</td>
+      <td class="period">16:00</td><td class="value">285</td><td class="mw">MW</td>
+      <td class="period">17:00</td><td class="value">264</td><td class="mw">MW</td>
+    </tr>
+    <tr>
+      <td class="period">12:30</td><td class="value">327</td><td class="mw">MW</td>
+      <td class="period">13:30</td><td class="value">320</td><td class="mw">MW</td>
+      <td class="period">14:30</td><td class="value">309</td><td class="mw">MW</td>
+      <td class="period">15:30</td><td class="value">294</td><td class="mw">MW</td>
+      <td class="period">16:30</td><td class="value">275</td><td class="mw">MW</td>
+      <td class="period">17:30</td><td class="value">252</td><td class="mw">MW</td>
+    </tr>
+    <tr>
+      <td class="period">18:00</td><td class="value">239</td><td class="mw">MW</td>
+      <td class="period">19:00</td><td class="value">210</td><td class="mw">MW</td>
+      <td class="period">20:00</td><td class="value">178</td><td class="mw">MW</td>
+      <td class="period">21:00</td><td class="value">149</td><td class="mw">MW</td>
+      <td class="period">22:00</td><td class="value">124</td><td class="mw">MW</td>
+      <td class="period">23:00</td><td class="value">103</td><td class="mw">MW</td>
+    </tr>
+    <tr>
+      <td class="period">18:30</td><td class="value">225</td><td class="mw">MW</td>
+      <td class="period">19:30</td><td class="value">194</td><td class="mw">MW</td>
+      <td class="period">20:30</td><td class="value">163</td><td class="mw">MW</td>
+      <td class="period">21:30</td><td class="value">136</td><td class="mw">MW</td>
+      <td class="period">22:30</td><td class="value">113</td><td class="mw">MW</td>
+      <td class="period">23:30</td><td class="value">94</td><td class="mw">MW</td>
+    </tr>
+  </table>
+  <p class="rhythm-note"><b>Direction C &mdash; Half-Hour Grid.</b> The 48 half-hourly periods form a baseline grid&mdash;tabular numerals, tight leading, alternating shade rhythm. One color only (ink). The cutoff row (05:00&ndash;09:30) carries the accent hue as the temporal anchor.</p>
+</body>
+</html>

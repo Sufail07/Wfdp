@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction G &mdash; Buyer's Shortfall</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #ffffff;
+    color: #111827;
+    line-height: 1.5;
+    padding: 48px 64px;
+  }
+  header {
+    margin-bottom: 56px;
+    max-width: 700px;
+  }
+  h1 {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    line-height: 1.05;
+    color: #111827;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .meta {
+    font-size: 0.875rem;
+    color: #6b7280;
+    letter-spacing: 0.02em;
+  }
+  .shortfall {
+    max-width: 720px;
+    margin-top: 40px;
+  }
+  .shortfall h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #4b5563;
+    margin-bottom: 24px;
+  }
+  .shortfall-rows {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.95rem;
+    line-height: 2.2;
+  }
+  .shortfall-rows div {
+    display: grid;
+    grid-template-columns: 100px 1fr 100px 100px;
+    gap: 16px;
+    margin-bottom: 6px;
+  }
+  .shortfall-rows .time { color: #6b7280; text-align: right; font-size: 0.8rem; }
+  .shortfall-rows .forecast { color: #111827; font-weight: 700; width: 80px; }
+  .shortfall-rows .risk { color: #b91c1c; font-weight: 800; width: 80px; text-align: right; letter-spacing: -0.02em; }
+  .shortfall-rows .safe { color: #15803d; font-weight: 700; width: 80px; text-align: right; letter-spacing: -0.02em; }
+  .shortfall-rows .risk-row .risk { color: #dc2626; background: #fef2f2; }
+  .shortfall-rows .risk-row .forecast { color: #991b1b; }
+  .shortfall-rows .safe-row .safe { color: #16a34a; background: #f0fdf4; }
+  .shortfall-rows .safe-row .forecast { color: #14532d; }
+  .risk-note {
+    margin-top: 56px;
+    font-size: 0.8125rem;
+    color: #6b7280;
+    max-width: 640px;
+    line-height: 1.7;
+  }
+  .risk-note b { color: #111827; }
+  @media (max-width: 768px) {
+    body { padding: 32px 24px; }
+    .shortfall-rows div { grid-template-columns: 80px 1fr 80px 80px; gap: 12px; font-size: 0.85rem; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Buyer's Shortfall Risk</h1>
+    <div class="meta">Delivery 15 Jan 2026 &middot; Over-forecast = bought more than wind delivers = shortfall</div>
+  </header>
+  <div class="shortfall">
+    <h2>Over-Forecast Exposure by Half-Hour (MW)</h2>
+    <div class="shortfall-rows">
+      <div class="time">00:00</div><div class="forecast">234</div><div class="risk safe-row">+0</div><div class="risk safe-row">234</div>
+      <div class="time">03:00</div><div class="forecast">285</div><div class="risk safe-row">+0</div><div class="risk safe-row">285</div>
+      <div class="time">06:00</div><div class="forecast risk-row">305</div><div class="risk risk-row">+18</div><div class="risk risk-row">287</div>
+      <div class="time">09:00</div><div class="forecast risk-row">324</div><div class="risk risk-row">+26</div><div class="risk risk-row">298</div>
+      <div class="time">12:00</div><div class="forecast risk-row">329</div><div class="risk risk-row">+31</div><div class="risk risk-row">298</div>
+      <div class="time">15:00</div><div class="forecast risk-row">302</div><div class="risk risk-row">+22</div><div class="risk risk-row">280</div>
+      <div class="time">18:00</div><div class="forecast">239</div><div class="risk safe-row">+0</div><div class="risk safe-row">239</div>
+      <div class="time">21:00</div><div class="forecast safe-row">149</div><div class="risk safe-row">+0</div><div class="risk safe-row">149</div>
+      <div class="time">23:30</div><div class="forecast safe-row">94</div><div class="risk safe-row">+0</div><div class="risk safe-row">94</div>
+    </div>
+  </div>
+  <p class="risk-note"><b>Direction G &mdash; Buyer's Shortfall.</b> Shortfall risk carries visual weight&mdash;condensed sans, tight tracking, red intensity scales with exposure. Three colors only: risk red, safety green, context gray.</p>
+</body>
+</html>
