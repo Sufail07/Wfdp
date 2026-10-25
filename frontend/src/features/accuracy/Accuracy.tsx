@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useMeta, useAccuracySummary, useAccuracyByHorizon, useAccuracyByHour, useAccuracyByWindLevel, useAccuracyDaily, useAccuracyErrorDistribution } from '../../api/client'
 import { KpiNumeral } from '../../components/KpiNumeral'
 import { BarChart, HistogramChart } from '../../components/charts'
@@ -32,12 +32,18 @@ const WIND_LEVEL_LABELS: Record<string, string> = {
 export function Accuracy() {
   const [fromDate, setFromDate] = useState(DEFAULT_FROM)
   const [toDate, setToDate] = useState(DEFAULT_TO)
+  const [cutoffHour, setCutoffHour] = useState(9)
+  const [cutoffMinute, setCutoffMinute] = useState(0)
   const [showBiasOnDaily, setShowBiasOnDaily] = useState(false)
 
   const {
     data: meta,
-    isLoading: metaLoading,
   } = useMeta()
+
+  useEffect(() => {
+    if (meta?.default_cutoff_hour !== undefined) setCutoffHour(meta.default_cutoff_hour)
+    if (meta?.default_cutoff_minute !== undefined) setCutoffMinute(meta.default_cutoff_minute)
+  }, [meta])
 
   const minDate = meta?.coverage_start || DEFAULT_FROM
   const maxDate = meta?.coverage_end || DEFAULT_TO
@@ -46,7 +52,7 @@ export function Accuracy() {
     data: summary,
     isLoading: summaryLoading,
     error: summaryError,
-  } = useAccuracySummary({ from_date: fromDate, to_date: toDate })
+  } = useAccuracySummary({ from_date: fromDate, to_date: toDate, cutoff_hour: cutoffHour, cutoff_minute: cutoffMinute })
 
   const {
     data: byHorizon,
@@ -56,29 +62,28 @@ export function Accuracy() {
   const {
     data: byHour,
     isLoading: hourLoading,
-  } = useAccuracyByHour(fromDate, toDate)
+  } = useAccuracyByHour(fromDate, toDate, cutoffHour, cutoffMinute)
 
   const {
     data: byWindLevel,
     isLoading: windLoading,
-  } = useAccuracyByWindLevel(fromDate, toDate)
+  } = useAccuracyByWindLevel(fromDate, toDate, cutoffHour, cutoffMinute)
 
   const {
     data: daily,
     isLoading: dailyLoading,
-  } = useAccuracyDaily(fromDate, toDate)
+  } = useAccuracyDaily(fromDate, toDate, cutoffHour, cutoffMinute)
 
   const {
     data: errorDist,
     isLoading: distLoading,
-  } = useAccuracyErrorDistribution(fromDate, toDate, undefined, undefined, 250)
+  } = useAccuracyErrorDistribution(fromDate, toDate, cutoffHour, cutoffMinute, 250)
 
   const metrics = summary?.metrics || {}
   const nDays = countDaysInRange(fromDate, toDate)
   const rangeSmallSample = nDays < 14
 
   const loading =
-    metaLoading ||
     summaryLoading ||
     horizonLoading ||
     hourLoading ||
@@ -217,6 +222,32 @@ export function Accuracy() {
                 max={maxDate}
                 className="input w-48"
               />
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="label">Cutoff Time (London)</label>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-semibold text-context">Hour</span>
+                <input
+                  type="number"
+                  value={cutoffHour}
+                  min={0}
+                  max={23}
+                  onChange={(e) => setCutoffHour(Math.max(0, Math.min(23, parseInt(e.target.value) || 0)))}
+                  className="w-20 input"
+                />
+                <span className="text-xs font-mono font-semibold text-context">Minute</span>
+                <input
+                  type="number"
+                  value={cutoffMinute}
+                  min={0}
+                  max={59}
+                  onChange={(e) => setCutoffMinute(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                  className="w-20 input"
+                />
+              </div>
+              <p className="text-xs font-mono text-context-light">
+                Default: {meta?.default_cutoff_hour?.toString().padStart(2, '0') || '09'}:{meta?.default_cutoff_minute?.toString().padStart(2, '0') || '00'}
+              </p>
             </div>
             {meta && (
               <p className="text-xs font-mono text-ink-muted mt-2 lg:mt-0">
