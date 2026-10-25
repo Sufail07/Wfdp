@@ -346,21 +346,25 @@ export function HistogramChart({
         inkMutedColor,
         paperColor,
       }),
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: paperColor,
-        borderColor: ruleColor,
-        textStyle: { color: inkColor, fontSize: 11, fontFamily: 'ui-monospace, monospace' },
-        formatter: (params: any) => {
-          const d = params.data
-          if (!d) return ''
-          const start = d.binStart
-          const end = d.binEnd
-          const count = d.y
-          const share = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : '0'
-          return `${start} to ${end} MW<br/>${count} half-hours (${share}%)`
+        tooltip: {
+          trigger: 'item',
+          backgroundColor: paperColor,
+          borderColor: ruleColor,
+          textStyle: { color: inkColor, fontSize: 11, fontFamily: 'ui-monospace, monospace' },
+          formatter: (params: any) => {
+            const d = params.data
+            if (!d) return ''
+            // MarkLine data points (zero line, P-markers) don't have binStart/binEnd
+            if (d.binStart === undefined || d.binEnd === undefined) {
+              return d.name || ''
+            }
+            const start = d.binStart
+            const end = d.binEnd
+            const count = d.y
+            const share = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : '0'
+            return `${start} to ${end} MW<br/>${count} half-hours (${share}%)`
+          },
         },
-      },
       xAxis: {
         ...baseOption({}).xAxis,
         type: 'value',

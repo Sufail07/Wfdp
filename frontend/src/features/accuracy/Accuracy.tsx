@@ -308,7 +308,7 @@ export function Accuracy() {
                   data={dailyData}
                   series2={showBiasOnDaily ? dailyBiasData : undefined}
                   series2Name="Bias"
-                  series2Color="var(--over)"
+                  series2Color="--over"
                   height={320}
                 />
                 {showBiasOnDaily && (
