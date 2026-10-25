@@ -4,14 +4,13 @@ import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 
 from app.api.schemas import (
-    MAX_BINS,
-    MAX_RANGE_DAYS,
+    AccuracySummaryResponse,
     AccuracyByHorizonResponse,
     AccuracyByHourResponse,
     AccuracyByWindLevelResponse,
     AccuracyDailyResponse,
     AccuracyErrorDistributionResponse,
-    AccuracySummaryResponse,
+    MAX_RANGE_DAYS,
 )
 from app.config import settings
 from app.data.loader import load_snapshot
@@ -49,16 +48,6 @@ def _validate_range(from_date: str, to_date: str) -> tuple[pd.Timestamp, pd.Time
         )
 
     return from_dt, to_dt
-
-
-def _validate_bins(bin_width: int) -> int:
-    """Validate histogram bin width cap."""
-    if bin_width > MAX_BINS:
-        raise HTTPException(
-            status_code=422,
-            detail=f"bin_width exceeds {MAX_BINS} (requested {bin_width})",
-        )
-    return bin_width
 
 
 def _load_aligned_pairs(from_date: str, to_date: str, cutoff_hour: int, cutoff_minute: int) -> pd.DataFrame:
@@ -254,7 +243,6 @@ async def get_accuracy_error_distribution(
 ):
     """Get error distribution histogram and quantiles."""
     _validate_range(from_date, to_date)
-    _validate_bins(bin_width)
 
     ch = cutoff_hour if cutoff_hour is not None else settings.cutoff_hour
     cm = cutoff_minute if cutoff_minute is not None else settings.cutoff_minute
