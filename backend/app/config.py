@@ -25,9 +25,10 @@ class Settings(BaseSettings):
     # Snapshot Path
     snapshot_path: Path = Path(__file__).parent.parent / "data" / "snapshot"
 
-    # Data Coverage (for validation)
-    data_start_date: str = "2026-01-01"
-    data_end_date: str = "2026-02-01"
+    # Plausibility
+    max_wind_mw: float = 30000.0
+    warn_wind_mw: float = 25000.0
+
 
     # Logging
     log_level: str = "INFO"

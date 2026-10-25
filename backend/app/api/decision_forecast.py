@@ -1,11 +1,14 @@
 """Decision forecast endpoint."""
 
+import logging
 import pandas as pd
 from fastapi import APIRouter, HTTPException
 
 from app.api.schemas import DecisionForecastPoint, DecisionForecastResponse
 from app.config import settings
 from app.domain.asof import get_cutoff_utc, select_decision_forecast
+
+logger = logging.getLogger("wind-forecast")
 
 router = APIRouter()
 
@@ -46,6 +49,29 @@ async def get_decision_forecast(
 
     cutoff_utc = get_cutoff_utc(delivery_dt, cutoff_hour, cutoff_minute)
 
+    # Plausibility guard
+    for _, row in result.iterrows():
+        if row["forecastMW"] > settings.max_wind_mw:
+            logger.warning(
+                "wind_plausibility_exceeded",
+                extra={
+                    "request_id": "-",
+                    "delivery_date": str(delivery_dt.date()),
+                    "forecastMW": float(row["forecastMW"]),
+                    "ceiling": settings.max_wind_mw,
+                },
+            )
+        elif row["forecastMW"] > settings.warn_wind_mw:
+            logger.warning(
+                "wind_plausibility_warn",
+                extra={
+                    "request_id": "-",
+                    "delivery_date": str(delivery_dt.date()),
+                    "forecastMW": float(row["forecastMW"]),
+                    "warn_threshold": settings.warn_wind_mw,
+                },
+            )
+
     forecasts = [
         DecisionForecastPoint(
             startTime=row["startTime"].isoformat(),
@@ -71,3 +97,4 @@ async def get_decision_forecast(
         mean_mw=sum(forecast_mws) / len(forecast_mws) if forecast_mws else None,
         forecast_published_at=forecasts[0].publishTime if forecasts else None,
     )
+
