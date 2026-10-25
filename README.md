@@ -187,7 +187,7 @@ Elexon/BMRS data (FUELHH and WINDFOR) is governed by BMRS licence terms. Before 
 
 This project was developed with assistance from AI tools including:
 - GitHub Copilot for code completion and scaffolding
-- Kilo Code for architecture planning and implementation guidance
+- Kilo Code (agentic coding harness powered by NVIDIA Nemotron 3.5 Super VL) for architecture planning, frontend/backend implementation, debugging, and deployment guidance
 - General LLM assistance for boilerplate generation and documentation
 
 All code was reviewed and validated by human developers.
